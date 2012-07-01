@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/pyl/icons">
+        <file>pyl.ico</file>
+    </qresource>
+</RCC>
