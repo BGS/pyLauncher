@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 import sys
+import subprocess
 import os
 
 from pyl_core.pyl_engine import * 
@@ -162,8 +163,6 @@ class Main(QtGui.QMainWindow):
 
         self.showAction.triggered.connect(self.show)
         self.exitAction.triggered.connect(self._close)
-        self.refreshAction.triggered.connect(self.beginResyncMemDb)
-        self.resyncAction.triggered.connect(self.beginRebuildCatalog)
         
         self.trayIcon.setContextMenu(self.trayMenu)
         
@@ -258,12 +257,10 @@ class Main(QtGui.QMainWindow):
         _exit_action = QtGui.QAction("Exit", self)
         _hide_window = QtGui.QAction("Hide", self)
 
-        self._contMenu.addAction(_refresh_catalog_action)
         self._contMenu.addAction(_rebuild_catalog_action)
         self._contMenu.addAction(_hide_window)
         self._contMenu.addAction(_exit_action)
 
-        _refresh_catalog_action.triggered.connect(self.beginResyncMemDb)
         _rebuild_catalog_action.triggered.connect(self.beginRebuildCatalog)
         _hide_window.triggered.connect(self.hide)
         _exit_action.triggered.connect(self._close)
@@ -276,14 +273,26 @@ class Main(QtGui.QMainWindow):
         self.trayIcon.hide()
         self.close()
 
-    def beginResyncMemDb(self):
-        self._engine.syncMemDb()
-       
     def beginRebuildCatalog(self):
-        syncdb =  os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe')
-        subprocess.Popen(syncdb, cwd=os.path.dirname(sys.argv[0]))
-        self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation started please wait!", 10000)
-
+        self.dbsync = QtCore.QProcess(self)
+        self.connect(self.dbsync, QtCore.SIGNAL("started()"), self.Started)
+        self.connect(self.dbsync, QtCore.SIGNAL("finished(int)"), self.onFinished)
+        self.dbsync.setWorkingDirectory(os.path.dirname(sys.argv[0]))
+        self.isInUse = True
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation started please wait!", 10000) 
+        self.dbsync.start(os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe'))
+    def Started(self):
+        self.emit(QtCore.SIGNAL("Started"))
+        
+    def onFinished(self, exitCode):
+        if exitCode == 0:
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation completed!", 10000)
+            self._engine.syncMemDb()
+            self.isInUse = False
+        else:
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation failed!", 10000)   
+       
+        
     def listView(self, listView):
         self.listView = listView
         self.listView.setStyle(QtGui.QStyleFactory.create("plastique"))
@@ -294,14 +303,18 @@ class Main(QtGui.QMainWindow):
         self.listView.setModel(self._engine.getFavAppData())
 
     def appExec(self, index):
-        status = self._engine.appExec(index)
-        if status == False:
-            self.trayIcon.showMessage("pyLauncher | Daemon", "Application not found or invalid! Preparing to remove it from catalog.", 10000)
+        if self.isInUse == True:
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation in progress please wait!", 10000)
             return ''
-        self.listView.setModel(self._engine.getFavAppData())
-        self.lineEdit.clear()
-        self.hide()
-        self.trayIcon.showMessage("pyLauncher | Daemon", "Application will start in a moment! Please wait.", 10000)
+        else:
+            status = self._engine.appExec(index)
+            if status == False:
+                self.trayIcon.showMessage("pyLauncher | Daemon", "Application not found or invalid! Preparing to remove it from catalog.", 10000)
+                return ''
+            self.listView.setModel(self._engine.getFavAppData())
+            self.lineEdit.clear()
+            self.hide()
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Application will start in a moment! Please wait.", 10000)
         
 
     def execFavAddAction(self):
@@ -349,13 +362,16 @@ class Main(QtGui.QMainWindow):
         self.lineEdit.setFocus()
 
     def textChanged(self):
-        name = ''
-        name += str(self.lineEdit.text())
-        if len(name) < 2:
-            self.listView.setModel(self._engine.getFavAppData())
-
+        if self.isInUse == True:
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation in progress please wait!", 10000)      
+            return ''
         else:
-            self.listView.setModel(self._engine.getAppData(name))
+            name = ''
+            name += str(self.lineEdit.text())
+            if len(name) < 2:
+                self.listView.setModel(self._engine.getFavAppData())
+            else:
+                self.listView.setModel(self._engine.getAppData(name))
 
 class Ui_Options(QtGui.QWidget):
     def __init__(self, parent=None):
@@ -413,10 +429,27 @@ class Ui_Options(QtGui.QWidget):
         if event.button() == QtCore.Qt.LeftButton:
             self.moving = False
 
+
     def beginRebuildCatalog(self):
-        syncdb =  os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe')
-        subprocess.Popen(syncdb, cwd=os.path.dirname(sys.argv[0]))
-                   
+        self.dbsync = QtCore.QProcess(self)
+        self.connect(self.dbsync, QtCore.SIGNAL("started()"), self.Started)
+        self.connect(self.dbsync, QtCore.SIGNAL("finished(int)"), self.onFinished)
+        self.dbsync.setWorkingDirectory(os.path.dirname(sys.argv[0]))
+        self.isInUse = True
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation started please wait!", 10000) 
+        self.dbsync.start(os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe'))
+    def Started(self):
+        self.emit(QtCore.SIGNAL("Started"))
+        
+    def onFinished(self, exitCode):
+        if exitCode == 0:
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation completed!", 10000)
+            self._engine.syncMemDb()
+            self.isInUse = False
+        else:
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation failed!", 10000)   
+       
+         
     def enableStartWithWindows(self):
         addToRegistry(os.path.realpath(sys.argv[0]))
         
@@ -443,7 +476,7 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    disablePy2ExeLogging()
+    #disablePy2ExeLogging()
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()

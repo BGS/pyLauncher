@@ -51,10 +51,7 @@ class DbEngine():
                 self._con.rollback()
                 print "Error %s:" % e.args[0]
                 
-    def checkDb(self):
-        if os.path.isfile(os.path.join(os.path.dirname(sys.argv[0]),'catalog.rldb')):
-            self.dbIntegrityCheck()
-            
+         
     def dbIntegrityCheck(self):
         app_data = 'CREATE TABLE IF NOT EXISTS app_data(name TEXT UNIQUE, path TEXT UNIQUE)'
         favorites = 'CREATE TABLE IF NOT EXISTS favorites(name TEXT UNIQUE, path TEXT UNIQUE)'
@@ -130,7 +127,7 @@ class DbSync():
     def getAppPathData(self):
         dbe = DbEngine()
         dbe.connect(os.path.join(os.path.dirname(sys.argv[0]),'catalog.rldb'))
-        dbe.checkDb()
+        dbe.dbIntegrityCheck()
         self._db = dbe
 
         windows_version = platform.uname()
@@ -189,9 +186,6 @@ class DbSync():
         else:
             pass
         
-def notifyRefreshNeeded():
-    MessageBox = windll.user32.MessageBoxA
-    MessageBox(None, "Catalog synchronisation completed please refresh!", 'pyLauncher | Daemon', 0x00000030L)
 
 def disablePy2ExeLogging():
     try:
@@ -206,5 +200,4 @@ def disablePy2ExeLogging():
 if __name__ == '__main__':
     disablePy2ExeLogging()
     DbSync().getAppPathData()
-    notifyRefreshNeeded()
     
