@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 import sys
-import subprocess
 import os
 
 from pyl_core.pyl_engine import * 
@@ -152,21 +151,26 @@ class Main(QtGui.QMainWindow):
         
         self.trayMenu = QtGui.QMenu()
         self.showAction = QtGui.QAction("Show", self)
-        self.refreshAction = QtGui.QAction("Refresh Catalog", self)
+        self.showOptionsAction = QtGui.QAction("Options", self)
         self.resyncAction = QtGui.QAction("Resync Catalog", self)
         self.exitAction = QtGui.QAction("Exit", self)
         
         self.trayMenu.addAction(self.showAction)
-        self.trayMenu.addAction(self.refreshAction)
+        self.trayMenu.addAction(self.showOptionsAction)
         self.trayMenu.addAction(self.resyncAction)
         self.trayMenu.addAction(self.exitAction)
 
+        self.showOptionsAction.triggered.connect(self.showOptions)
         self.showAction.triggered.connect(self.show)
         self.exitAction.triggered.connect(self._close)
         
         self.trayIcon.setContextMenu(self.trayMenu)
         
         self.trayIcon.show()
+
+    def showOptions(self):
+        self._OptUi = Ui_Options()
+        self._OptUi.show()
     
     def onTrayIconActivated(self, reason):
         if reason == QtGui.QSystemTrayIcon.DoubleClick:
@@ -378,9 +382,6 @@ class Ui_Options(QtGui.QWidget):
         super(Ui_Options, self).__init__(parent)
         self.windowOpts()
         
-        self.resyncCatalogButton = QtGui.QCommandLinkButton("Resync Catalog", self)
-        self.resyncCatalogButton.setGeometry(QtCore.QRect(20, 10, 121, 41))
-        self.resyncCatalogButton.setObjectName(_fromUtf8("resyncCatalogButton"))
         self.startWithWindowsButton = QtGui.QCommandLinkButton("Enable Autostart", self)
         self.startWithWindowsButton.setGeometry(QtCore.QRect(20, 50, 161, 41))
         self.startWithWindowsButton.setObjectName(_fromUtf8("startWithWindowsButton"))
@@ -405,7 +406,6 @@ class Ui_Options(QtGui.QWidget):
         self.pyLauncherLabel.setObjectName(_fromUtf8("pyLauncherLabel"))
    
         self.connect(self.ExitButton, QtCore.SIGNAL('clicked()'), self.close)
-        self.connect(self.resyncCatalogButton, QtCore.SIGNAL('clicked()'), self.beginRebuildCatalog)
         self.connect(self.startWithWindowsButton, QtCore.SIGNAL('clicked()'), self.enableStartWithWindows)
         self.connect(self.disableStartWithWindowsButton, QtCore.SIGNAL('clicked()'), self.disableStartWithWindows)
 
@@ -429,27 +429,6 @@ class Ui_Options(QtGui.QWidget):
         if event.button() == QtCore.Qt.LeftButton:
             self.moving = False
 
-
-    def beginRebuildCatalog(self):
-        self.dbsync = QtCore.QProcess(self)
-        self.connect(self.dbsync, QtCore.SIGNAL("started()"), self.Started)
-        self.connect(self.dbsync, QtCore.SIGNAL("finished(int)"), self.onFinished)
-        self.dbsync.setWorkingDirectory(os.path.dirname(sys.argv[0]))
-        self.isInUse = True
-        self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation started please wait!", 10000) 
-        self.dbsync.start(os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe'))
-    def Started(self):
-        self.emit(QtCore.SIGNAL("Started"))
-        
-    def onFinished(self, exitCode):
-        if exitCode == 0:
-            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation completed!", 10000)
-            self._engine.syncMemDb()
-            self.isInUse = False
-        else:
-            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation failed!", 10000)   
-       
-         
     def enableStartWithWindows(self):
         addToRegistry(os.path.realpath(sys.argv[0]))
         
@@ -476,7 +455,7 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    #disablePy2ExeLogging()
+    disablePy2ExeLogging()
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()
