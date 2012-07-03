@@ -394,8 +394,9 @@ class Ui_Options(QtGui.QWidget):
         super(Ui_Options, self).__init__(parent)
         
         self.setWindowTitle("pyLauncher | Options")
+
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-        
+  
         self.resize(320, 195)
         
         self.groupBox = QtGui.QGroupBox("pyLauncher", self)
