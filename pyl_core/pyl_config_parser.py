@@ -32,8 +32,11 @@ class CfgParser():
     def generate_cfg_file(self):
         self._config.add_section('dbSynchronised')
         self._config.set('dbSynchronised', 'isSynchronised', 'False')
+        self._config.set('dbSynchronised', 'autoSynchronisation', 'True')
         self._config.add_section('Autostart')
         self._config.set('Autostart', 'isEnabled', 'False')
+        self._config.add_section('windowOptions')
+        self._config.set('windowOptions', 'wndAlwaysOnTop', 'True')
 
         with open('config.cfg', 'wb') as configfile:
             self._config.write(configfile)

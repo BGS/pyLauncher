@@ -77,9 +77,7 @@ class GlobalHotKey(QtGui.QApplication):
         # 0x002 -> MOD_CONTROL | 0x20 -> SPACEBAR
         
         register = self.RegisterHotKey(c_int(self.mainWindow.winId()), self.HOT_KEY_ID, 0x0002, 0x20)
-        if not register:
-            QtGui.QMessageBox.critical(None, 'pyLauncher Hotkeys', "Can't Register Hotkey Control + Space, make sure all instances of pyLauncher are closed.")
-
+        
     def winEventFilter(self, msg):
         if msg.message == self.WM_HOTKEY:
             if self.mainWindow.isVisible():
@@ -102,28 +100,34 @@ class Main(QtGui.QMainWindow):
         super(QtGui.QMainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.isInUse = False
+        self.setTrayIcon()
         self.createContextMenu()
         self._engine = EngineInit(os.path.join(os.path.dirname(sys.argv[0]), 'catalog.rldb'))
-        self.windowOpts()
-        self.setTrayIcon()
-        self.setShortcuts()
         self.config_checkup()
+        self.windowOpts()
+        self.setShortcuts()
+     
 
     def config_checkup(self):
         parser = CfgParser()
+        self.cfg_parser = parser.get_cfg_parser()
         if os.path.exists('config.cfg'):
-            cfg_parser = parser.get_cfg_parser()
-            cfg_parser.read('config.cfg')
-            dbopt = cfg_parser.get('dbSynchronised', 'isSynchronised')
-            auto_start_opt = cfg_parser.get('Autostart', 'isEnabled')
-            if dbopt == 'False' or auto_start_opt == 'False':
-                cfg_parser.set('dbSynchronised', 'isSynchronised', 'True')
-                cfg_parser.set('Autostart', 'isEnabled', 'True')
+            self.cfg_parser.read('config.cfg')
+            db_first_sync_opt = self.cfg_parser.get('dbSynchronised', 'isSynchronised')
+            auto_start_opt = self.cfg_parser.get('Autostart', 'isEnabled')
+            auto_sync_opt = self.cfg_parser.get('dbSynchronised', 'autoSynchronisation')
+            if db_first_sync_opt == 'False' or auto_start_opt == 'False':
+                self.cfg_parser.set('dbSynchronised', 'isSynchronised', 'True')
+                self.cfg_parser.set('Autostart', 'isEnabled', 'True')
                 self.beginRebuildCatalog()
                 addToRegistry(os.path.realpath(sys.argv[0]))       
                 self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation in progress please wait! \nAutostart has been Enabled!\nPress Ctrl+Space to show or hide me and Ctrl+Q\nto turn me off :( !", 50000)         
-                
-            elif auto_start_opt == 'Denied':
+            elif auto_sync_opt == 'True' and db_first_sync_opt != 'False':
+                self.beginRebuildCatalog()
+            elif auto_sync_opt == 'False':
+                pass
+            elif auto_start_opt == 'Disabled':
                 pass
             elif auto_start_opt == 'True':
                 pass
@@ -131,7 +135,7 @@ class Main(QtGui.QMainWindow):
                 pass
 
             with open('config.cfg', 'wb') as configfile:
-                cfg_parser.write(configfile)
+                self.cfg_parser.write(configfile)
                 
         else:
             parser.generate_cfg_file()
@@ -141,7 +145,12 @@ class Main(QtGui.QMainWindow):
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Q"), self, self.close)
 
     def windowOpts(self):
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+        always_on_top = self.cfg_parser.get('windowOptions', 'wndAlwaysOnTop')
+        if always_on_top == 'True':
+            self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+        else:
+            self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+       
         self.setWindowOpacity(0.8)
 
     def setTrayIcon(self):
@@ -256,8 +265,9 @@ class Main(QtGui.QMainWindow):
 
         self._contMenu.addSeparator()
         
-        _refresh_catalog_action = QtGui.QAction("Refresh Catalog", self)
         _rebuild_catalog_action = QtGui.QAction("Rebuild Catalog", self)
+        
+        
         _exit_action = QtGui.QAction("Exit", self)
         _hide_window = QtGui.QAction("Hide", self)
 
@@ -377,71 +387,106 @@ class Main(QtGui.QMainWindow):
             else:
                 self.listView.setModel(self._engine.getAppData(name))
 
+
+
 class Ui_Options(QtGui.QWidget):
     def __init__(self, parent=None):
         super(Ui_Options, self).__init__(parent)
-        self.windowOpts()
         
-        self.startWithWindowsButton = QtGui.QCommandLinkButton("Enable Autostart", self)
-        self.startWithWindowsButton.setGeometry(QtCore.QRect(20, 50, 161, 41))
-        self.startWithWindowsButton.setObjectName(_fromUtf8("startWithWindowsButton"))
-        self.disableStartWithWindowsButton = QtGui.QCommandLinkButton("Disable Autostart", self)
-        self.disableStartWithWindowsButton.setGeometry(QtCore.QRect(20, 100, 161, 41))
-        self.disableStartWithWindowsButton.setObjectName(_fromUtf8("disableStartWithWindowsButton"))       
-        self.ExitButton = QtGui.QCommandLinkButton("Exit", self)
-        self.ExitButton.setGeometry(QtCore.QRect(330, 0, 71, 41))
-        self.ExitButton.setObjectName(_fromUtf8("ExitButton"))
-
-        self.pyLauncherLabel = QtGui.QLabel("pyLauncher", self)
-        self.pyLauncherLabel.setGeometry(QtCore.QRect(10, 195, 121, 21))
-        
-        font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Segoe UI"))
-        font.setPointSize(16)
-        font.setBold(True)
-        font.setWeight(75)
-        
-        self.pyLauncherLabel.setFont(font)
-        self.pyLauncherLabel.setTextFormat(QtCore.Qt.AutoText)
-        self.pyLauncherLabel.setObjectName(_fromUtf8("pyLauncherLabel"))
-   
-        self.connect(self.ExitButton, QtCore.SIGNAL('clicked()'), self.close)
-        self.connect(self.startWithWindowsButton, QtCore.SIGNAL('clicked()'), self.enableStartWithWindows)
-        self.connect(self.disableStartWithWindowsButton, QtCore.SIGNAL('clicked()'), self.disableStartWithWindows)
-
-    def windowOpts(self):
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-        self.setWindowOpacity(0.8)
-        self.resize(394, 229)
         self.setWindowTitle("pyLauncher | Options")
-        self.setStyleSheet(_fromUtf8("color:gray;\n"
-"background-color: rgb(0, 0, 0)"))   
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         
-    def mouseMoveEvent(self, event):
-        if self.moving:
-            self.move(event.globalPos()-self.offset)
-
-    def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            self.moving = True; self.offset = event.pos()
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            self.moving = False
-
-    def enableStartWithWindows(self):
-        addToRegistry(os.path.realpath(sys.argv[0]))
+        self.resize(320, 195)
         
-    def disableStartWithWindows(self):
-        removeFromRegistry()
+        self.groupBox = QtGui.QGroupBox("pyLauncher", self)
+        self.groupBox.setGeometry(QtCore.QRect(10, 10, 305, 165))
+        self.groupBox.setObjectName(_fromUtf8("groupBox"))
+        
+        self.autoUpdateCheckBox = QtGui.QCheckBox("Auto synchronise Catalog ", self.groupBox)
+        self.autoUpdateCheckBox.setGeometry(QtCore.QRect(10, 30, 161, 18))
+
+        self.startWithWindowsCheckbox = QtGui.QCheckBox("Start with Windows", self.groupBox)
+        self.startWithWindowsCheckbox.setGeometry(QtCore.QRect(10, 70, 121, 18))
+    
+        self.checkBoxStayOnTop = QtGui.QCheckBox("Always on top", self.groupBox)
+        self.checkBoxStayOnTop.setGeometry(QtCore.QRect(10, 110, 131, 18))
+        
         parser = CfgParser()
+        self.cfg_parser = parser.get_cfg_parser()
         if os.path.exists('config.cfg'):
-            cfg_parser = parser.get_cfg_parser()
-            cfg_parser.read('config.cfg')
-            cfg_parser.set('Autostart', 'isEnabled', 'Denied')
-            with open('config.cfg', 'wb') as configfile:
-                cfg_parser.write(configfile)
+            self.cfg_parser.read('config.cfg')
+            auto_start_opt = self.cfg_parser.get('Autostart', 'isEnabled')
+            auto_sync_opt = self.cfg_parser.get('dbSynchronised', 'autoSynchronisation')
+            always_on_top = self.cfg_parser.get('windowOptions', 'wndAlwaysOnTop')
+            print always_on_top
+        if auto_start_opt == 'True':
+            self.startWithWindowsCheckbox.toggle()
+        elif auto_sync_opt == 'True':
+            self.autoUpdateCheckBox.toggle()
+        elif always_on_top == 'True':
+            self.checkBoxStayOnTop.toggle()   
+            
+        else:
+            pass
 
+        self.checkBoxStayOnTop.stateChanged.connect(self.stayOnTopCheckBox)
+        self.startWithWindowsCheckbox.stateChanged.connect(self.autoStartCheckBox)
+        self.autoUpdateCheckBox.stateChanged.connect(self._autoUpdateCheckBox)  
+        
+        QtCore.QMetaObject.connectSlotsByName(self)
+
+    def autoStartCheckBox(self, state):
+        if state == QtCore.Qt.Checked:
+            addToRegistry(os.path.realpath(sys.argv[0]))
+            parser = CfgParser()
+            if os.path.exists('config.cfg'):
+                cfg_parser = parser.get_cfg_parser()
+                cfg_parser.read('config.cfg')
+                cfg_parser.set('Autostart', 'isEnabled', 'True')
+                with open('config.cfg', 'wb') as configfile:
+                    cfg_parser.write(configfile)
+        else:
+            removeFromRegistry()
+            parser = CfgParser()
+            if os.path.exists('config.cfg'):
+                cfg_parser = parser.get_cfg_parser()
+                cfg_parser.read('config.cfg')
+                cfg_parser.set('Autostart', 'isEnabled', 'Disabled')
+                with open('config.cfg', 'wb') as configfile:
+                    cfg_parser.write(configfile)
+            
+    def stayOnTopCheckBox(self, state):
+        if state == QtCore.Qt.Checked:
+            parser = CfgParser()
+            if os.path.exists('config.cfg'):
+                cfg_parser = parser.get_cfg_parser()
+                cfg_parser.set('windowOptions', 'wndAlwaysOnTop', 'True')
+                with open('config.cfg', 'wb') as configfile:
+                    cfg_parser.write(configfile)
+        else:
+            parser = CfgParser()
+            if os.path.exists('config.cfg'):
+                cfg_parser = parser.get_cfg_parser()
+                cfg_parser.set('windowOptions', 'wndAlwaysOnTop', 'False')
+                with open('config.cfg', 'wb') as configfile:
+                    cfg_parser.write(configfile)
+            
+    def _autoUpdateCheckBox(self, state):
+        if state == QtCore.Qt.Checked:
+            parser = CfgParser()
+            if os.path.exists('config.cfg'):
+                cfg_parser = parser.get_cfg_parser()
+                cfg_parser.set('dbSynchronised', 'autoSynchronisation', 'True')
+                with open('config.cfg', 'wb') as configfile:
+                    cfg_parser.write(configfile)
+        else:
+            parser = CfgParser()
+            if os.path.exists('config.cfg'):
+                cfg_parser = parser.get_cfg_parser()
+                cfg_parser.set('dbSynchronised', 'autoSynchronisation', 'False')
+                with open('config.cfg', 'wb') as configfile:
+                    cfg_parser.write(configfile)
+         
 def disablePy2ExeLogging():
     try:
         sys.stdout = open("nul", "w")
