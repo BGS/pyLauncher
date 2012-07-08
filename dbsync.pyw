@@ -53,12 +53,13 @@ class DbEngine():
                 
          
     def dbIntegrityCheck(self):
-        app_data = 'CREATE TABLE IF NOT EXISTS app_data(name TEXT UNIQUE, path TEXT UNIQUE)'
-        favorites = 'CREATE TABLE IF NOT EXISTS favorites(name TEXT UNIQUE, path TEXT UNIQUE)'
-        sysutils = 'CREATE TABLE IF NOT EXISTS sysutils(name TEXT UNIQUE, path TEXT UNIQUE)'
-        applications = 'CREATE TABLE IF NOT EXISTS applications(name TEXT UNIQUE, path TEXT UNIQUE)'
-        graphics = 'CREATE TABLE IF NOT EXISTS internet(name TEXT UNIQUE, path TEXT UNIQUE)'
-        internet = 'CREATE TABLE IF NOT EXISTS graphics(name TEXT UNIQUE, path TEXT UNIQUE)'
+        app_data = 'CREATE VIRTUAL TABLE IF NOT EXISTS app_data USING fts4(name, path)'
+        favorites = 'CREATE VIRTUAL TABLE IF NOT EXISTS favorites USING fts4(name, path)'
+        sysutils = 'CREATE VIRTUAL TABLE IF NOT EXISTS sysutils USING fts4(name, path)'
+        applications = 'CREATE VIRTUAL TABLE IF NOT EXISTS applications USING fts4(name, path)'
+        graphics = 'CREATE VIRTUAL TABLE IF NOT EXISTS graphics USING fts4(name, path)'
+        internet = 'CREATE VIRTUAL TABLE IF NOT EXISTS internet USING fts4(name, path)'
+
 
         self._cursor.execute(app_data)
         self._cursor.execute(favorites)
@@ -68,6 +69,8 @@ class DbEngine():
         self._cursor.execute(internet)
 
         self._con.commit()
+
+   
 
     def insert_data(self, queryset, args):
         self.queryset = queryset
@@ -198,6 +201,6 @@ def disablePy2ExeLogging():
         pass
 
 if __name__ == '__main__':
-    disablePy2ExeLogging()
+    #disablePy2ExeLogging()
     DbSync().getAppPathData()
     

@@ -28,7 +28,6 @@ import sqlite3
 import sys
 import subprocess
 import os
-import re
 
 from pyl_model import setModelData
 
@@ -52,10 +51,7 @@ class EngineInit():
         if os.stat(self._dbname).st_size == 0:
             self._con = sqlite3.connect(self._dbname)
             self._cursor = self._con.cursor()
-            self.dbIntegrityCheck()
-            syncdb =  os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe')
-            subprocess.Popen(syncdb, cwd=os.path.dirname(sys.argv[0]))
-          
+            self.dbIntegrityCheck()        
         else:
             self._con = apsw.Connection(self._dbname)
             self._cursor = self._con.cursor()
@@ -69,12 +65,13 @@ class EngineInit():
             backup.step()
 
     def dbIntegrityCheck(self):
-        app_data = 'CREATE TABLE IF NOT EXISTS app_data(name TEXT UNIQUE, path TEXT UNIQUE)'
-        favorites = 'CREATE TABLE IF NOT EXISTS favorites(name TEXT UNIQUE, path TEXT UNIQUE)'
-        sysutils = 'CREATE TABLE IF NOT EXISTS sysutils(name TEXT UNIQUE, path TEXT UNIQUE)'
-        applications = 'CREATE TABLE IF NOT EXISTS applications(name TEXT UNIQUE, path TEXT UNIQUE)'
-        graphics = 'CREATE TABLE IF NOT EXISTS internet(name TEXT UNIQUE, path TEXT UNIQUE)'
-        internet = 'CREATE TABLE IF NOT EXISTS graphics(name TEXT UNIQUE, path TEXT UNIQUE)'
+        app_data = 'CREATE VIRTUAL TABLE IF NOT EXISTS app_data USING fts4(name, path)'
+        favorites = 'CREATE VIRTUAL TABLE IF NOT EXISTS favorites USING fts4(name, path)'
+        sysutils = 'CREATE VIRTUAL TABLE IF NOT EXISTS sysutils USING fts4(name, path)'
+        applications = 'CREATE VIRTUAL TABLE IF NOT EXISTS applications USING fts4(name, path)'
+        graphics = 'CREATE VIRTUAL TABLE IF NOT EXISTS graphics USING fts4(name, path)'
+        internet = 'CREATE VIRTUAL TABLE IF NOT EXISTS internet USING fts4(name, path)'
+
 
         self._cursor.execute(app_data)
         self._cursor.execute(favorites)
@@ -90,11 +87,9 @@ class EngineInit():
         self._path_list = []
         self._name_list = []
 
-        for row in self._memcon.cursor().execute("SELECT name,path FROM app_data"):
-
-            if row[0].lower().find(app_name.lower()) != -1:
-                self._path_list.append(row[1])
-                self._name_list.append(row[0])
+        for row in self._memcon.cursor().execute("SELECT name,path FROM app_data where name MATCH '*%s*'" % app_name):
+            self._path_list.append(row[1])
+            self._name_list.append(row[0])
 
         return setModelData(self._path_list, self._name_list)
 

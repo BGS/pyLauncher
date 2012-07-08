@@ -27,7 +27,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 import sys
 import os
 
-from pyl_core.pyl_engine import * 
+from pyl_core.pyl_engine import *
+from pyl_core.pyl_winreg import *
 from pyl_core.pyl_model import *
 from pyl_core.pyl_config_parser import *
 
@@ -396,7 +397,7 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    disablePy2ExeLogging()
+    #disablePy2ExeLogging()
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()
