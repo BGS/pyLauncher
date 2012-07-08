@@ -177,7 +177,7 @@ class EngineInit():
 
     def appExec(self, index):
         try:
-            Popen(self._path_list[index.row()], cwd=os.path.dirname(self._path_list[index.row()]))
+            subprocess.Popen(self._path_list[index.row()], cwd=os.path.dirname(self._path_list[index.row()]))
         except WindowsError:
             self._cursor.execute('DELETE FROM app_data WHERE path="%s"' % self._path_list[index.row()].strip())
 
