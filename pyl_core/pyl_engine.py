@@ -72,7 +72,6 @@ class EngineInit():
         graphics = 'CREATE VIRTUAL TABLE IF NOT EXISTS graphics USING fts4(name, path)'
         internet = 'CREATE VIRTUAL TABLE IF NOT EXISTS internet USING fts4(name, path)'
 
-
         self._cursor.execute(app_data)
         self._cursor.execute(favorites)
         self._cursor.execute(sysutils)
@@ -178,7 +177,7 @@ class EngineInit():
 
     def appExec(self, index):
         try:
-            subprocess.Popen(self._path_list[index.row()], cwd=os.path.dirname(self._path_list[index.row()]))
+            .Popen(self._path_list[index.row()], cwd=os.path.dirname(self._path_list[index.row()]))
         except WindowsError:
             self._cursor.execute('DELETE FROM app_data WHERE path="%s"' % self._path_list[index.row()].strip())
 

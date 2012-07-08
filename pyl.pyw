@@ -96,6 +96,8 @@ class Main(QtGui.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.isInUse = False
+        self.fileManagerMode = False
+        self.model = QtGui.QFileSystemModel()
         self.setTrayIcon()
         self.createContextMenu()
         self._engine = EngineInit(os.path.join(os.path.dirname(sys.argv[0]), 'catalog.rldb'))
@@ -193,18 +195,23 @@ class Main(QtGui.QMainWindow):
             self.moving = False
             
     def MenuGetFavAppData(self):
+        self.fileManagerMode = False
         self.listView.setModel(self._engine.getFavAppData())
 
     def MenuGetAppData(self):
+        self.fileManagerMode = False
         self.listView.setModel(self._engine.getMenuAppData())
 
     def MenuGetInternetAppData(self):
+        self.fileManagerMode = False
         self.listView.setModel(self._engine.getInternetAppData())
 
     def MenuGetGraphicsAppData(self):
+        self.fileManagerMode = False
         self.listView.setModel(self._engine.getGraphicsAppData())
 
     def MenuGetSystem_UtilitiesData(self):
+        self.fileManagerMode = False
         self.listView.setModel(self._engine.getSystem_UtilitiesAppData())
 
     def MenuShowOptions(self):
@@ -290,6 +297,7 @@ class Main(QtGui.QMainWindow):
         self.isInUse = True
         self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation started please wait!", 10000) 
         self.dbsync.start(os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe'))
+
     def Started(self):
         self.emit(QtCore.SIGNAL("Started"))
         
@@ -316,14 +324,25 @@ class Main(QtGui.QMainWindow):
             self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation in progress please wait!", 10000)
             return ''
         else:
-            status = self._engine.appExec(index)
-            if status == False:
-                self.trayIcon.showMessage("pyLauncher | Daemon", "Application not found or invalid! Preparing to remove it from catalog.", 10000)
+            if  self.fileManagerMode == True:
+                path = str(self.model.filePath(index))
+                path = path.replace("/", "\\")
+                subprocess.Popen(r'explorer ' + path )
+                self.listView.setModel(self._engine.getFavAppData())
+                self.lineEdit.clear()
+                self.hide()
+                self.trayIcon.showMessage("pyLauncher | Daemon", "Opening path: "+path+" please wait!", 10000)
                 return ''
-            self.listView.setModel(self._engine.getFavAppData())
-            self.lineEdit.clear()
-            self.hide()
-            self.trayIcon.showMessage("pyLauncher | Daemon", "Application will start in a moment! Please wait.", 10000)
+            
+            else:
+                status = self._engine.appExec(index)
+                if status == False:
+                    self.trayIcon.showMessage("pyLauncher | Daemon", "Application not found or invalid! Preparing to remove it from catalog.", 10000)
+                    return ''
+                self.listView.setModel(self._engine.getFavAppData())
+                self.lineEdit.clear()
+                self.hide()
+                self.trayIcon.showMessage("pyLauncher | Daemon", "Application will start in a moment! Please wait.", 10000)
         
 
     def execFavAddAction(self):
@@ -375,12 +394,20 @@ class Main(QtGui.QMainWindow):
             self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation in progress please wait!", 10000)      
             return ''
         else:
-            name = ''
-            name += str(self.lineEdit.text())
-            if len(name) < 2:
+            query = ''
+            query += self.lineEdit.text()
+            if len(query) < 2:
+                self.fileManagerMode = False
                 self.listView.setModel(self._engine.getFavAppData())
             else:
-                self.listView.setModel(self._engine.getAppData(name))
+                if os.path.exists(query):
+                    self.fileManagerMode = True
+                    self.listView.setModel(self.model)
+                    self.listView.setRootIndex(self.model.setRootPath(query))
+                
+                else:
+                    self.fileManagerMode = False
+                    self.listView.setModel(self._engine.getAppData(query))
 
 
          
