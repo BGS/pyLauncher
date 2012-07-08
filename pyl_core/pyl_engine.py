@@ -42,19 +42,9 @@ class EngineInit():
         self._dbname = dbname
         self._path_list = []
         self._name_list = []
-        try:
-            self._con = apsw.Connection(self._dbname)
-            self._con.close()
-        except Exception:
-            pass
-        
-        if os.stat(self._dbname).st_size == 0:
-            self._con = sqlite3.connect(self._dbname)
-            self._cursor = self._con.cursor()
-            self.dbIntegrityCheck()        
-        else:
-            self._con = apsw.Connection(self._dbname)
-            self._cursor = self._con.cursor()
+
+        self._con = apsw.Connection(self._dbname)
+        self._cursor = self._con.cursor()
 
         with self._memcon.backup("main", self._con, "main") as backup:
             while not backup.done:
@@ -63,24 +53,6 @@ class EngineInit():
     def syncMemDb(self):
         with self._memcon.backup("main", self._con, "main") as backup:
             backup.step()
-
-    def dbIntegrityCheck(self):
-        app_data = 'CREATE VIRTUAL TABLE IF NOT EXISTS app_data USING fts4(name, path)'
-        favorites = 'CREATE VIRTUAL TABLE IF NOT EXISTS favorites USING fts4(name, path)'
-        sysutils = 'CREATE VIRTUAL TABLE IF NOT EXISTS sysutils USING fts4(name, path)'
-        applications = 'CREATE VIRTUAL TABLE IF NOT EXISTS applications USING fts4(name, path)'
-        graphics = 'CREATE VIRTUAL TABLE IF NOT EXISTS graphics USING fts4(name, path)'
-        internet = 'CREATE VIRTUAL TABLE IF NOT EXISTS internet USING fts4(name, path)'
-
-        self._cursor.execute(app_data)
-        self._cursor.execute(favorites)
-        self._cursor.execute(sysutils)
-        self._cursor.execute(applications)
-        self._cursor.execute(graphics)
-        self._cursor.execute(internet)
-
-        self._con.commit()
-
    
     def getAppData(self, app_name):
         self._path_list = []

@@ -44,6 +44,7 @@ class DbEngine():
         try:
             self._con = sqlite3.connect(self.dbname)
             if self._con:
+                self._con.text_factory = str
                 self._cursor = self._con.cursor()
 
         except sqlite3.Error, e:
@@ -54,11 +55,11 @@ class DbEngine():
          
     def dbIntegrityCheck(self):
         app_data = 'CREATE VIRTUAL TABLE IF NOT EXISTS app_data USING fts4(name, path)'
-        favorites = 'CREATE VIRTUAL TABLE IF NOT EXISTS favorites USING fts4(name, path)'
-        sysutils = 'CREATE VIRTUAL TABLE IF NOT EXISTS sysutils USING fts4(name, path)'
-        applications = 'CREATE VIRTUAL TABLE IF NOT EXISTS applications USING fts4(name, path)'
-        graphics = 'CREATE VIRTUAL TABLE IF NOT EXISTS graphics USING fts4(name, path)'
-        internet = 'CREATE VIRTUAL TABLE IF NOT EXISTS internet USING fts4(name, path)'
+        favorites = 'CREATE TABLE IF NOT EXISTS favorites (name UNIQUE, path UNIQUE)'
+        sysutils = 'CREATE  TABLE IF NOT EXISTS sysutils(name UNIQUE, path UNIQUE)'
+        applications = 'CREATE TABLE IF NOT EXISTS applications(name UNIQUE, path UNIQUE)'
+        graphics = 'CREATE TABLE IF NOT EXISTS graphics(name UNIQUE, path UNIQUE)'
+        internet = 'CREATE TABLE IF NOT EXISTS internet(name UNIQUE, path UNIQUE)'
 
 
         self._cursor.execute(app_data)
@@ -70,9 +71,12 @@ class DbEngine():
 
         self._con.commit()
 
-   
+    def checkDuplicate(self, data):
+        self._cursor.execute("SELECT count(*) FROM app_data WHERE name = ?", (data,))
+        count = self._cursor.fetchone()[0]
+        return count
 
-    def insert_data(self, queryset, args):
+    def execQuery(self, queryset, args):
         self.queryset = queryset
         self.args = args
         try:
@@ -138,7 +142,7 @@ class DbSync():
         if windows_version[0] == 'Windows' and windows_version[2] == '7':
             paths = ["%s\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu" % (os.environ['SYSTEMDRIVE'], os.environ.get("USERNAME")),
                      "%s\ProgramData\Microsoft\Windows\Start Menu" % os.environ['SYSTEMDRIVE']]
-            # sper sa fie asa =) fuckin windows xp
+
         elif windows_version[0] == "Windows" and windows_version[2] == "xp":
             paths = ["%s\Documents and Settings\Users\Start Menu\Programs" % os.environ['SYSTEMDRIVE'],
                      "%s\Documents and Settings\%s\Start Menu\Programs" % (os.environ['SYSTEMDRIVE'], os.environ.get("USERNAME")),
@@ -169,23 +173,41 @@ class DbSync():
             path = sh.GetPath(shell.SLGP_RAWPATH)[0]
             if path.find("{") != -1 and path.startswith("{", 21):
                 real_path = self.getMsiRealPath(shortcut_path)
-                self._db.insert_data('INSERT OR REPLACE INTO app_data VALUES (?,?)', (name.split('.')[0], real_path))              
-                
+                count = self._db.checkDuplicate(name.split('.')[0])
+                if count == 0:
+                    self._db.execQuery('INSERT INTO app_data VALUES (?,?)', (name.split('.')[0], path))
+                else:
+                    self._db.execQuery('UPDATE app_data SET name=?,path=? WHERE name=?', (name.split('.')[0], real_path,name.split('.')[0])) 
             else:
                 if path.endswith(".exe"):
                     if path.startswith("%systemroot%") or path.startswith("%windir%"):
                         tmp_path = path.split('%')
                         path = os.environ['windir'] + tmp_path[2]
-                        self._db.insert_data('INSERT OR REPLACE INTO app_data VALUES (?,?)', (name.split('.')[0], path))
-
+                        count = self._db.checkDuplicate(name.split('.')[0])
+                        if count == 0:
+                            self._db.execQuery('INSERT INTO app_data VALUES (?,?)', (name.split('.')[0], path))
+                        else:
+                            self._db.execQuery('UPDATE app_data SET name=?,path=? WHERE name=?', (name.split('.')[0], path,name.split('.')[0]))                            
                     elif  path.startswith("%ProgramFiles%"):
                         tmp_path = path.split('%')
                         path = os.environ["ProgramFiles"] + tmp_path[2]
-                        self._db.insert_data('INSERT OR REPLACE INTO app_data VALUES (?,?)', (name.split('.')[0], path))
-
+                        count = self._db.checkDuplicate(name.split('.')[0])
+                        if count == 0:
+                            self._db.execQuery('INSERT INTO app_data VALUES (?,?)', (name.split('.')[0], path))
+                        else:
+                            self._db.execQuery('UPDATE app_data SET name=?,path=? WHERE name=?', (name.split('.')[0], path,name.split('.')[0]))        
                     else:
-                        self._db.insert_data('INSERT OR REPLACE INTO app_data VALUES (?,?)', (name.split('.')[0], path))                      
-                        self.inserted.add(name)
+                        count = self._db.checkDuplicate(name.split('.')[0])
+                        if count == 0:
+                            self._db.execQuery('INSERT INTO app_data VALUES (?,?)', (name.split('.')[0], path))
+                        else:
+                            self._db.execQuery('UPDATE app_data SET name=?,path=? WHERE name=?', (name.split('.')[0], path,name.split('.')[0]))
+                        
+                            
+                            name.split('.')[0]
+                            
+                    self.inserted.add(name)
+                    
         else:
             pass
         
