@@ -137,7 +137,7 @@ class DbSync():
 
     def getAppPathData(self):
         dbe = DbEngine()
-        dbe.connect(os.path.join(os.path.dirname(sys.argv[0]),'catalog.rldb'))
+        dbe.connect(os.path.join(os.path.dirname(sys.argv[0]),'catalog'))
         dbe.dbIntegrityCheck()
         self._db = dbe
 

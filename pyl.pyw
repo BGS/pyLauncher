@@ -100,7 +100,7 @@ class Main(QtGui.QMainWindow):
         self.model = QtGui.QFileSystemModel()
         self.setTrayIcon()
         self.createContextMenu()
-        self._engine = EngineInit(os.path.join(os.path.dirname(sys.argv[0]), 'catalog.rldb'))
+        self._engine = EngineInit(os.path.join(os.path.dirname(sys.argv[0]), 'catalog'))
         self.config_checkup()
         self.windowOpts()
         self.setShortcuts()
@@ -180,7 +180,12 @@ class Main(QtGui.QMainWindow):
     
     def onTrayIconActivated(self, reason):
         if reason == QtGui.QSystemTrayIcon.DoubleClick:
-            self.show()
+            if self.isVisible():
+                self.hide()
+            else:
+                self.lineEdit.clear()
+                self.lineEditSetFocus()
+                self.show()
         
     def mouseMoveEvent(self, event):
         if self.moving:
