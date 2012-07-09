@@ -54,7 +54,11 @@ class DbEngine():
                 
          
     def dbIntegrityCheck(self):
-        app_data = 'CREATE VIRTUAL TABLE IF NOT EXISTS app_data USING fts4(name, path)'
+        try:
+            app_data = 'CREATE VIRTUAL TABLE app_data USING fts4(name, path);'
+        except sqlite3.OperationalError:
+            #tabela exista deja
+            pass
         favorites = 'CREATE TABLE IF NOT EXISTS favorites (name UNIQUE, path UNIQUE)'
         sysutils = 'CREATE  TABLE IF NOT EXISTS sysutils(name UNIQUE, path UNIQUE)'
         applications = 'CREATE TABLE IF NOT EXISTS applications(name UNIQUE, path UNIQUE)'
@@ -204,8 +208,6 @@ class DbSync():
                             self._db.execQuery('UPDATE app_data SET name=?,path=? WHERE name=?', (name.split('.')[0], path,name.split('.')[0]))
                         
                             
-                            name.split('.')[0]
-                            
                     self.inserted.add(name)
                     
         else:
@@ -223,6 +225,6 @@ def disablePy2ExeLogging():
         pass
 
 if __name__ == '__main__':
-    #disablePy2ExeLogging()
+    disablePy2ExeLogging()
     DbSync().getAppPathData()
     
