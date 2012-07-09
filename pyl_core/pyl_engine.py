@@ -91,10 +91,10 @@ class EngineInit():
 
         return setModelData(self._path_list, self._name_list)
 
-    def getGraphicsAppData(self):
+    def getMediaAppData(self):
         self._path_list = []
         self._name_list = []
-        for row in self._memcon.cursor().execute("SELECT name,path FROM graphics"):
+        for row in self._memcon.cursor().execute("SELECT name,path FROM media"):
             self._path_list.append(row[1])
             self._name_list.append(row[0])
 
@@ -116,7 +116,7 @@ class EngineInit():
             elif table == 'app':
                 self._cursor.execute('INSERT OR REPLACE INTO applications VALUES (?,?)', (self._name_list[index], self._path_list[index]))
             elif table == 'graph':
-                self._cursor.execute('INSERT OR REPLACE INTO graphics VALUES (?,?)', (self._name_list[index], self._path_list[index]))
+                self._cursor.execute('INSERT OR REPLACE INTO media VALUES (?,?)', (self._name_list[index], self._path_list[index]))
             elif table == 'sys_util':
                 self._cursor.execute('INSERT OR REPLACE INTO sysutils VALUES (?,?)', (self._name_list[index], self._path_list[index]))
             elif table == 'internet':
@@ -135,7 +135,7 @@ class EngineInit():
             elif table == 'app':
                 self._cursor.execute('DELETE FROM applications WHERE path="%s"' % self._path_list[index].strip())
             elif table == 'graph':
-                self._cursor.execute('DELETE FROM graphics WHERE path="%s"' % self._path_list[index].strip())
+                self._cursor.execute('DELETE FROM media WHERE path="%s"' % self._path_list[index].strip())
             elif table == 'sys_util':
                 self._cursor.execute('DELETE FROM sysutils WHERE path="%s"' % self._path_list[index].strip())
             elif table == 'internet':

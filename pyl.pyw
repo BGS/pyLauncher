@@ -206,9 +206,9 @@ class Main(QtGui.QMainWindow):
         self.fileManagerMode = False
         self.listView.setModel(self._engine.getInternetAppData())
 
-    def MenuGetGraphicsAppData(self):
+    def MenuGetMediaAppData(self):
         self.fileManagerMode = False
-        self.listView.setModel(self._engine.getGraphicsAppData())
+        self.listView.setModel(self._engine.getMediaAppData())
 
     def MenuGetSystem_UtilitiesData(self):
         self.fileManagerMode = False
@@ -227,7 +227,7 @@ class Main(QtGui.QMainWindow):
                 
         _add_favAction = QtGui.QAction("Favorites", self)
         _add_appAction = QtGui.QAction("Applications", self)
-        _add_graphAction = QtGui.QAction("Graphics", self)
+        _add_graphAction = QtGui.QAction("Media", self)
         _add_sys_util_Action = QtGui.QAction("System Utilities", self)
         _add_internetAction = QtGui.QAction("Internet", self)
         
@@ -246,7 +246,7 @@ class Main(QtGui.QMainWindow):
  
         _rem_favAction = QtGui.QAction("Favorites", self)
         _rem_appAction = QtGui.QAction("Applications", self)
-        _rem_graphAction = QtGui.QAction("Graphics", self)
+        _rem_graphAction = QtGui.QAction("Media", self)
         _rem_sys_util_Action = QtGui.QAction("System Utilities", self)
         _rem_internetAction = QtGui.QAction("Internet", self)
         

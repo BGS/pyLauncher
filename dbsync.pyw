@@ -59,7 +59,7 @@ class DbEngine():
         favorites = 'CREATE TABLE IF NOT EXISTS favorites (name UNIQUE, path UNIQUE)'
         sysutils = 'CREATE  TABLE IF NOT EXISTS sysutils(name UNIQUE, path UNIQUE)'
         applications = 'CREATE TABLE IF NOT EXISTS applications(name UNIQUE, path UNIQUE)'
-        graphics = 'CREATE TABLE IF NOT EXISTS graphics(name UNIQUE, path UNIQUE)'
+        media = 'CREATE TABLE IF NOT EXISTS media(name UNIQUE, path UNIQUE)'
         internet = 'CREATE TABLE IF NOT EXISTS internet(name UNIQUE, path UNIQUE)'
 
         try:
@@ -70,7 +70,7 @@ class DbEngine():
         self._cursor.execute(favorites)
         self._cursor.execute(sysutils)
         self._cursor.execute(applications)
-        self._cursor.execute(graphics)
+        self._cursor.execute(media)
         self._cursor.execute(internet)
 
         self._con.commit()
