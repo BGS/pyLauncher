@@ -3,6 +3,17 @@
 pyLauncher | Windows Application Launcher
 
 pyLauncher is in Beta stage patches are appreciated thank you.
-pyLauncher is licensed under the GNU GENERAL PUBLIC LICENSE Version 2
+pyLauncher is licensed under the GNU GENERAL PUBLIC LICENSE Version 3
 
+Dependencies:
+PyQt4
+APSW
+PyWin32 (Windows extensions for python)
+
+To do:
+Add Plugin Manager
+Better Icon Extraction system
+
+Known Issues:
+Better Icon Extraction system
 #############################################
