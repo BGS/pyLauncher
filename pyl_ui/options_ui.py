@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from PyQt4 import QtCore, QtGui
 
-from pyl_core.pyl_config_parser import *
+from pyl_core.pyl_config_parser import Parser
 from pyl_core.pyl_winreg import *
 
 try:
@@ -49,88 +49,55 @@ class Ui_Options(QtGui.QWidget):
         self.autoUpdateCheckBox = QtGui.QCheckBox("Auto synchronise Catalog ", self.groupBox)
         self.autoUpdateCheckBox.setGeometry(QtCore.QRect(10, 30, 161, 18))
 
-        self.startWithWindowsCheckbox = QtGui.QCheckBox("Start with Windows", self.groupBox)
-        self.startWithWindowsCheckbox.setGeometry(QtCore.QRect(10, 70, 121, 18))
+        self.startWithWindowsCheckBox = QtGui.QCheckBox("Start with Windows", self.groupBox)
+        self.startWithWindowsCheckBox.setGeometry(QtCore.QRect(10, 70, 121, 18))
     
         self.checkBoxStayOnTop = QtGui.QCheckBox("Always on top", self.groupBox)
         self.checkBoxStayOnTop.setGeometry(QtCore.QRect(10, 110, 131, 18))
-        
-        parser = CfgParser()
-        self.cfg_parser = parser.get_cfg_parser()
-        if os.path.exists('config.cfg'):
-            self.cfg_parser.read('config.cfg')
-            auto_sync_opt = self.cfg_parser.get('dbSynchronised', 'autoSynchronisation')
-            auto_start_opt = self.cfg_parser.get('Autostart', 'isEnabled')
-            always_on_top = self.cfg_parser.get('windowOptions', 'wndAlwaysOnTop')
 
-        if auto_start_opt == 'True':
-            self.startWithWindowsCheckbox.toggle()
-        if auto_sync_opt == 'True':
+
+        parser = Parser()
+        config = parser.get_config_values()
+        
+
+        if config['autosync'] == 'True':
             self.autoUpdateCheckBox.toggle()
-        if always_on_top == 'True':
-            self.checkBoxStayOnTop.toggle()   
-   
-
-        self.checkBoxStayOnTop.stateChanged.connect(self.stayOnTopCheckBox)
-        self.startWithWindowsCheckbox.stateChanged.connect(self.autoStartCheckBox)
-        self.autoUpdateCheckBox.stateChanged.connect(self._autoUpdateCheckBox)  
         
+        if config['autorun'] == 'True':
+            self.startWithWindowsCheckBox.toggle()
+           
+        if config['always_on_top'] == 'True':
+            self.checkBoxStayOnTop.toggle()
+            
+   
+        self.checkBoxStayOnTop.stateChanged.connect(self.stayOnTopCheckBox)
+        self.startWithWindowsCheckBox.stateChanged.connect(self.autoStartCheckBox)
+        self.autoUpdateCheckBox.stateChanged.connect(self._autoUpdateCheckBox)  
+
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def _autoUpdateCheckBox(self, state):
+        parser = Parser()
         if state == QtCore.Qt.Checked:
-            parser = CfgParser()
-            if os.path.exists('config.cfg'):
-                cfg_parser = parser.get_cfg_parser()
-                cfg_parser.read('config.cfg')
-                cfg_parser.set('dbSynchronised', 'autoSynchronisation', 'True')
-                with open('config.cfg', 'wb') as configfile:
-                    cfg_parser.write(configfile)
+            parser.set_value(section='Settings', option='autosync', value='True')
         else:
-            parser = CfgParser()
-            if os.path.exists('config.cfg'):
-                cfg_parser = parser.get_cfg_parser()
-                cfg_parser.read('config.cfg')
-                cfg_parser.set('dbSynchronised', 'autoSynchronisation', 'False')
-                with open('config.cfg', 'wb') as configfile:
-                    cfg_parser.write(configfile)
-
-
+            parser.set_value(section='Settings', option='autosync', value='False')
+       
+            
     def autoStartCheckBox(self, state):
+        parser = Parser()
         if state == QtCore.Qt.Checked:
+            parser.set_value(section='Settings', option='autorun', value='True')
             addToRegistry(os.path.realpath(sys.argv[0]))
-            parser = CfgParser()
-            if os.path.exists('config.cfg'):
-                cfg_parser = parser.get_cfg_parser()
-                cfg_parser.read('config.cfg')
-                cfg_parser.set('Autostart', 'isEnabled', 'True')
-                with open('config.cfg', 'wb') as configfile:
-                    cfg_parser.write(configfile)
         else:
+            parser.set_value(section='Settings', option='autorun', value='False')
             removeFromRegistry()
-            parser = CfgParser()
-            if os.path.exists('config.cfg'):
-                cfg_parser = parser.get_cfg_parser()
-                cfg_parser.read('config.cfg')
-                cfg_parser.set('Autostart', 'isEnabled', 'Disabled')
-                with open('config.cfg', 'wb') as configfile:
-                    cfg_parser.write(configfile)
             
     def stayOnTopCheckBox(self, state):
+        parser = Parser()
         if state == QtCore.Qt.Checked:
-            parser = CfgParser()
-            if os.path.exists('config.cfg'):
-                cfg_parser = parser.get_cfg_parser()
-                cfg_parser.read('config.cfg')
-                cfg_parser.set('windowOptions', 'wndAlwaysOnTop', 'True')
-                with open('config.cfg', 'wb') as configfile:
-                    cfg_parser.write(configfile)
+            parser.set_value(section='Settings', option='always_on_top', value='True')
         else:
-            parser = CfgParser()
-            if os.path.exists('config.cfg'):
-                cfg_parser = parser.get_cfg_parser()
-                cfg_parser.read('config.cfg')
-                cfg_parser.set('windowOptions', 'wndAlwaysOnTop', 'False')
-                with open('config.cfg', 'wb') as configfile:
-                    cfg_parser.write(configfile)
+            parser.set_value(section='Settings', option='always_on_top', value='False')
+           
             

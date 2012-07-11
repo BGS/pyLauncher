@@ -21,24 +21,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # -*- coding: utf-8 -*-
 
-import ConfigParser
+import ConfigParser, os, sys
 
-class CfgParser():
-    def __init__(self):
-        self._config = ConfigParser.RawConfigParser()
+class Parser():
 
-    def generate_cfg_file(self):
-        self._config.add_section('dbSynchronised')
-        self._config.set('dbSynchronised', 'isSynchronised', 'False')
-        self._config.set('dbSynchronised', 'autoSynchronisation', 'True')
-        self._config.add_section('Autostart')
-        self._config.set('Autostart', 'isEnabled', 'False')
-        self._config.add_section('windowOptions')
-        self._config.set('windowOptions', 'wndAlwaysOnTop', 'True')
+    def generate_ini_file(self, _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
+        self._parser = ConfigParser.RawConfigParser()
+        
+        self._parser.add_section('Settings')
+        self._parser.set('Settings', 'first_run', 'True')
+        self._parser.set('Settings', 'autosync', 'True')
+        self._parser.set('Settings', 'autorun', 'True')
+        self._parser.set('Settings', 'always_on_top', 'True')
 
-        with open('config.cfg', 'wb') as configfile:
-            self._config.write(configfile)
+        with open(_file, 'wb') as cfgfile:
+            self._parser.write(cfgfile)
 
-    
-    def get_cfg_parser(self):
-        return self._config
+    def get_config_values(self, parser=ConfigParser.RawConfigParser(), _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
+        parser.read(_file)
+        return dict(parser.items('Settings'))
+                         
+    def set_value(self, section, option, value, parser=ConfigParser.RawConfigParser(), _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
+        parser.read(_file)
+        parser.set(section, option, value)
+        with open(_file, 'wb') as cfgfile:
+            parser.write(cfgfile)
+
+

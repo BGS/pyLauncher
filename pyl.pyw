@@ -28,7 +28,7 @@ import os
 from pyl_core.pyl_engine import *
 from pyl_core.pyl_winreg import *
 from pyl_core.pyl_model import *
-from pyl_core.pyl_config_parser import *
+from pyl_core.pyl_config_parser import Parser
 
 from pyl_rc.pyl_rc import *
 
@@ -99,54 +99,42 @@ class Main(QtGui.QMainWindow):
         self.setTrayIcon()
         self.createContextMenu()
         self._engine = EngineInit(os.path.join(os.path.dirname(sys.argv[0]), 'catalog'))
-        self.config_checkup()
-        self.windowOpts()
+        self.cfg_parse()
         self.setShortcuts()
      
 
-    def config_checkup(self):
-        parser = CfgParser()
-        self.cfg_parser = parser.get_cfg_parser()
-        if os.path.exists('config.cfg'):
-            self.cfg_parser.read('config.cfg')
-            db_first_sync_opt = self.cfg_parser.get('dbSynchronised', 'isSynchronised')
-            auto_start_opt = self.cfg_parser.get('Autostart', 'isEnabled')
-            auto_sync_opt = self.cfg_parser.get('dbSynchronised', 'autoSynchronisation')
-            if db_first_sync_opt == 'False' or auto_start_opt == 'False':
-                self.cfg_parser.set('dbSynchronised', 'isSynchronised', 'True')
-                self.cfg_parser.set('Autostart', 'isEnabled', 'True')
-                self.beginRebuildCatalog()
-                addToRegistry(os.path.realpath(sys.argv[0]))       
-                self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation in progress please wait! \nAutostart has been Enabled!\nPress Ctrl+Space to show or hide me and Ctrl+Q\nto turn me off :( !", 50000)         
-            elif auto_sync_opt == 'True' and db_first_sync_opt != 'False':
-                self.beginRebuildCatalog()
-            elif auto_sync_opt == 'False':
-                pass
-            elif auto_start_opt == 'Disabled':
-                pass
-            elif auto_start_opt == 'True':
-                pass
-            elif dbopt == 'True':
-                pass
+    def cfg_parse(self):
 
-            with open('config.cfg', 'wb') as configfile:
-                self.cfg_parser.write(configfile)
-                
+        parser = Parser()
+        if os.path.exists(os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
+            config = parser.get_config_values()
+           
+            if config['always_on_top'] == 'True':
+                self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+            else:
+                self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+       
+            self.setWindowOpacity(0.8)
+           
+            if config['first_run'] == 'True':
+                self.beginRebuildCatalog()
+                addToRegistry(os.path.realpath(sys.argv[0]))
+                parser.set_value(section='Settings', option='first_run', value='False')
+            if config['first_run'] == 'False':
+                if config['autosync'] == 'True':
+                    self.beginRebuildCatalog()
+            if config['autorun'] == 'True':
+                addToRegistry(os.path.realpath(sys.argv[0]))
+                             
         else:
-            parser.generate_cfg_file()
+            parser.generate_ini_file()
+            self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+            self.setWindowOpacity(0.8)
 
-
+        
     def setShortcuts(self):
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Q"), self, self.close)
 
-    def windowOpts(self):
-        always_on_top = self.cfg_parser.get('windowOptions', 'wndAlwaysOnTop')
-        if always_on_top == 'True':
-            self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-        else:
-            self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-       
-        self.setWindowOpacity(0.8)
 
     def setTrayIcon(self):
         self.trayIcon = QtGui.QSystemTrayIcon(self)
@@ -311,7 +299,7 @@ class Main(QtGui.QMainWindow):
             self.isInUse = False
         else:
             self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation failed!", 10000)   
-       
+            self.isInUse = False
         
     def listView(self, listView):
         self.listView = listView
@@ -331,7 +319,6 @@ class Main(QtGui.QMainWindow):
                 path = str(self.model.filePath(index))
                 path = path.replace("/", "\\")
                 subprocess.Popen(r'explorer ' + path )
-                self.listView.setModel(self._engine.getFavAppData())
                 self.lineEdit.clear()
                 self.hide()
                 self.trayIcon.showMessage("pyLauncher | Daemon", "Opening path: "+path+" please wait!", 10000)
@@ -342,7 +329,6 @@ class Main(QtGui.QMainWindow):
                 if status == False:
                     self.trayIcon.showMessage("pyLauncher | Daemon", "Application not found or invalid! Preparing to remove it from catalog.", 10000)
                     return ''
-                self.listView.setModel(self._engine.getFavAppData())
                 self.lineEdit.clear()
                 self.hide()
                 self.trayIcon.showMessage("pyLauncher | Daemon", "Application will start in a moment! Please wait.", 10000)
@@ -427,7 +413,7 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    disablePy2ExeLogging()
+    #disablePy2ExeLogging()
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()
