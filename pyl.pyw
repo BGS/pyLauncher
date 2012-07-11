@@ -413,7 +413,7 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    #disablePy2ExeLogging()
+    disablePy2ExeLogging()
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()
