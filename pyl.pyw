@@ -77,8 +77,8 @@ class GlobalHotKey(QtGui.QApplication):
                 self.mainWindow.hide()
             else:
                 self.mainWindow.lineEdit.clear()
-                self.mainWindow.lineEditSetFocus()
                 self.mainWindow.show()
+                self.mainWindow.lineEditSetFocus()
             return True, 0
         
 
@@ -182,8 +182,8 @@ class Main(QtGui.QMainWindow):
                 self.hide()
             else:
                 self.lineEdit.clear()
-                self.lineEditSetFocus()
                 self.show()
+                self.lineEditSetFocus()
         
     def mouseMoveEvent(self, event):
         if self.moving:
