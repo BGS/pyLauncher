@@ -313,27 +313,23 @@ class Main(QtGui.QMainWindow):
         self.listView.setModel(self._engine.getFavAppData())
 
     def appExec(self, index):
-        if self.isInUse == True:
-            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation in progress please wait!", 10000)
+        if  self.fileManagerMode == True:
+            path = str(self.model.filePath(index))
+            path = path.replace("/", "\\")
+            subprocess.Popen(r'explorer ' + path )
+            self.lineEdit.clear()
+            self.hide()
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Opening path: "+path+" please wait!", 10000)
             return ''
-        else:
-            if  self.fileManagerMode == True:
-                path = str(self.model.filePath(index))
-                path = path.replace("/", "\\")
-                subprocess.Popen(r'explorer ' + path )
-                self.lineEdit.clear()
-                self.hide()
-                self.trayIcon.showMessage("pyLauncher | Daemon", "Opening path: "+path+" please wait!", 10000)
-                return ''
             
-            else:
-                status = self._engine.appExec(index)
-                if status == False:
-                    self.trayIcon.showMessage("pyLauncher | Daemon", "Application not found or invalid! Preparing to remove it from catalog.", 10000)
-                    return ''
-                self.lineEdit.clear()
-                self.hide()
-                self.trayIcon.showMessage("pyLauncher | Daemon", "Application will start in a moment! Please wait.", 10000)
+        else:
+            status = self._engine.appExec(index)
+            if status == False:
+                self.trayIcon.showMessage("pyLauncher | Daemon", "Application not found or invalid! Preparing to remove it from catalog.", 10000)
+                return ''
+            self.lineEdit.clear()
+            self.hide()
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Application will start in a moment! Please wait.", 10000)
         
 
     def execFavAddAction(self):
