@@ -77,6 +77,7 @@ class GlobalHotKey(QtGui.QApplication):
                 self.mainWindow.hide()
             else:
                 self.mainWindow.lineEdit.clear()
+                self.mainWindow.listView.setModel(self.mainWindow._engine.getFavAppData())
                 self.mainWindow.show()
                 self.mainWindow.lineEditSetFocus()
             return True, 0
@@ -170,6 +171,7 @@ class Main(QtGui.QMainWindow):
                 self.hide()
             else:
                 self.lineEdit.clear()
+                self.listView.setModel(self._engine.getFavAppData())
                 self.show()
                 self.lineEditSetFocus()
         
