@@ -41,6 +41,9 @@ except ImportError:
 
 
 setup(
+    name='pyLauncher',
+    version='0.1',
+    author='Blaga Florentin Gabriel',
     options = {'py2exe': {'bundle_files': 1},
                "py2exe":{"dll_excludes":[ "mswsock.dll", "powrprof.dll" ]},
                "py2exe":{"packages":["gzip"], 
@@ -48,8 +51,13 @@ setup(
                          
     data_files = [
             ('imageformats', [
-              r'C:\Python27\Lib\site-packages\PyQt4\plugins\imageformats\qico4.dll'
-              ])],
+              r'C:\Python27\Lib\site-packages\PyQt4\plugins\imageformats\qico4.dll']),
+             
+             ('plugins', ['plugins/pyl_shell.py',
+                          'plugins/pyl_shell.ext']),
+             
+             ('', ['settings.ini'])
+             ],
 
     windows = [{
         'script': "pyl.pyw",

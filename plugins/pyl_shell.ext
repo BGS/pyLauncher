@@ -1,0 +1,9 @@
+[Core]
+Name = pyLauncher Shell
+Module = pyl_shell
+
+[Documentation]
+Author = Blaga Florentin Gabriel
+Version = 0.1
+Website = https://github.com/BGS/pyLauncher
+Description = Execute shell commands ( cmd ping google.ro )

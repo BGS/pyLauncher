@@ -28,7 +28,7 @@ import subprocess
 import os
 
 from pyl_model import setModelData
-
+from pyl_core.pyl_config_parser import Parser
 
 import ctypes
 import ctypes.wintypes
@@ -36,6 +36,7 @@ import ctypes.wintypes
 class EngineInit():
 
     def __init__(self, dbname):
+        self.parser = Parser()
         self._memcon = apsw.Connection(":memory:")
         self._dbname = dbname
         self._path_list = []
@@ -53,10 +54,12 @@ class EngineInit():
             backup.step()
    
     def getAppData(self, app_name):
+        config = self.parser.get_config_values()
+        
         self._path_list = []
         self._name_list = []
 
-        for row in self._memcon.cursor().execute("SELECT name,path FROM app_data where name MATCH '*%s*'" % app_name):
+        for row in self._memcon.cursor().execute("SELECT name,path FROM app_data where name MATCH '*%s*' LIMIT %s" % (app_name, config['max_results'])):
             self._path_list.append(row[1])
             self._name_list.append(row[0])
 

@@ -32,6 +32,10 @@ class Parser():
         self._parser.set('Settings', 'first_run', 'True')
         self._parser.set('Settings', 'autosync', 'True')
         self._parser.set('Settings', 'autorun', 'True')
+        self._parser.set('Settings', 'show_tips', 'True')
+        self._parser.set('Settings', 'transparency', 0.8)
+        self._parser.set('Settings', 'max_results', 5)
+        self._parser.set('Settings', 'auto_update', 'True')
         self._parser.set('Settings', 'always_on_top', 'True')
 
         with open(_file, 'wb') as cfgfile:

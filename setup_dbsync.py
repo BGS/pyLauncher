@@ -42,9 +42,13 @@ except ImportError:
 
 
 setup(
+    name='dbsync',
+    version='0.1',
+    author='Blaga Florentin Gabriel',
     options = {'py2exe': {'bundle_files': 1},
-               "py2exe":{"dll_excludes":[ "mswsock.dll", "powrprof.dll" ]},
+               "py2exe":{"dll_excludes":[ "mswsock.dll", "powrprof.dll", "MSWSOCK.DLL", "POWRPROF.DLL" ]},
                "py2exe":{"packages":["gzip"], 
-                         "includes":["sip", "csv"]}},    windows = [{'script': "dbsync.pyw"}],
+                         "includes":["sip", "csv"]}},
+    windows = [{'script': "dbsync.pyw"}],
     zipfile = None,
 )

@@ -19,13 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mainwindow.ui'
-#
-# Created: Mon May 07 17:41:02 2012
-#      by: PyQt4 UI code generator 4.9.1
-#
-# WARNING! All changes made in this file will be lost! 
-
 from PyQt4 import QtCore, QtGui
 
 try:
@@ -159,8 +152,11 @@ class Ui_MainWindow(object):
         self.menuSystem_UtilitiesAction.triggered.connect(self._MainWindow.MenuGetSystem_UtilitiesData)
         self.menuOptionsAction.triggered.connect(self._MainWindow.MenuShowOptions)
         
-
+    def getMainWindow(self):
+        return self._MainWindow
+    
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "pyLauncher", None, QtGui.QApplication.UnicodeUTF8))
         self.qLabel.setText(QtGui.QApplication.translate("MainWindow", "pyLauncher", None, QtGui.QApplication.UnicodeUTF8))
         self.statusBar.showMessage(QtGui.QApplication.translate("MainWindow", "v0.1"))
+

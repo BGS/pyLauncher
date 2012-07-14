@@ -26,7 +26,6 @@ import itertools
 import sys
 import os
 import sqlite3
-import platform
 import pythoncom
 
 from win32com.shell import shell
@@ -139,30 +138,28 @@ class DbSync():
         dbe.dbIntegrityCheck()
         self._db = dbe
 
-        windows_version = platform.uname()
+        paths = ["%s\Documents and Settings\Users\Start Menu\Programs" % os.environ['SYSTEMDRIVE'],
+         "%s\Documents and Settings\%s\Start Menu\Programs" % (os.environ['SYSTEMDRIVE'], os.environ.get("USERNAME")),
+         "%s\Documents and Settings\All Users\Start Menu\Programs" % os.environ['SYSTEMDRIVE'],
+         "%s\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu" % (os.environ['SYSTEMDRIVE'], os.environ.get("USERNAME")),
+         "%s\ProgramData\Microsoft\Windows\Start Menu" % os.environ['SYSTEMDRIVE']]
 
-        if windows_version[0] == 'Windows' and windows_version[2] == '7':
-            paths = ["%s\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu" % (os.environ['SYSTEMDRIVE'], os.environ.get("USERNAME")),
-                     "%s\ProgramData\Microsoft\Windows\Start Menu" % os.environ['SYSTEMDRIVE']]
-
-        elif windows_version[0] == "Windows" and windows_version[2] == "xp":
-            paths = ["%s\Documents and Settings\Users\Start Menu\Programs" % os.environ['SYSTEMDRIVE'],
-                     "%s\Documents and Settings\%s\Start Menu\Programs" % (os.environ['SYSTEMDRIVE'], os.environ.get("USERNAME")),
-                     "%s\Documents and Settings\All Users\Start Menu\Programs" % os.environ['SYSTEMDRIVE']]
+       
         self.inserted = set()       
         shortcut_path = []
         shortcut_name = []
-
+        
         for path in paths:
-            for root, dirs, files in os.walk(path):
-                for file in files:
-                    if file.endswith(".lnk"):
-                        shortcut_path.append(os.path.join(root, file))
-                        shortcut_name.append(file)
+            if os.path.exists(path):
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        if file.endswith(".lnk"):
+                            shortcut_path.append(os.path.join(root, file))
+                            shortcut_name.append(file)
         for path, name in itertools.izip(shortcut_path, shortcut_name):
             self.pushData2Db(path, name)
 
-    
+
     def pushData2Db(self, path, name):
         sh = pythoncom.CoCreateInstance(shell.CLSID_ShellLink, None,
                                            pythoncom.CLSCTX_INPROC_SERVER,
@@ -223,6 +220,6 @@ def disablePy2ExeLogging():
         pass
 
 if __name__ == '__main__':
-    disablePy2ExeLogging()
+    #disablePy2ExeLogging()
     DbSync().getAppPathData()
     

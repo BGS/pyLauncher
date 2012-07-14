@@ -57,7 +57,6 @@ class ItemDelegatorModel(QtCore.QAbstractListModel):
     def rowCount(self, parent):
         return len(self._path_list)
 
-
     def data(self, index, role):
 
         if role == QtCore.Qt.DisplayRole:

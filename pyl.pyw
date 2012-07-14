@@ -25,10 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import os
 
-from pyl_core.pyl_engine import *
-from pyl_core.pyl_winreg import *
-from pyl_core.pyl_model import *
+from pyl_core.pyl_engine import EngineInit
+from pyl_core.pyl_winreg import addToRegistry, removeFromRegistry
+from pyl_core.pyl_model import ItemDelegatorModel
 from pyl_core.pyl_config_parser import Parser
+from pyl_core.pyl_plugins import PluginInit
 
 from pyl_rc.pyl_rc import *
 
@@ -38,8 +39,12 @@ from pyl_ui.options_ui import Ui_Options
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
+from random import choice
+
 from ctypes import c_bool, c_int, WINFUNCTYPE, windll
 from ctypes.wintypes import UINT
+
+sys.path.append('pyl_plugin_categories')
 
 class GlobalHotKey(QtGui.QApplication):
     def __init__(self, argv):
@@ -102,40 +107,62 @@ class Main(QtGui.QMainWindow):
         self._engine = EngineInit(os.path.join(os.path.dirname(sys.argv[0]), 'catalog'))
         self.cfg_parse()
         self.setShortcuts()
+        self.plugins = PluginInit()
+        self.extensions = self.plugins.getPluginsFromCategory('pylSearchExtensions')
      
 
     def cfg_parse(self):
 
+        timer = QtCore.QTimer()
         parser = Parser()
         if os.path.exists(os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
             config = parser.get_config_values()
-           
-            if config['always_on_top'] == 'True':
-                self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-            else:
-                self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+            transparency = float(config['transparency'])
+
+            try:
+                if config['always_on_top'] == 'True':
+                    self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+                else:
+                    self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
        
-            self.setWindowOpacity(0.8)
+                self.setWindowOpacity(transparency)
            
-            if config['first_run'] == 'True':
-                self.beginRebuildCatalog()
-                addToRegistry(os.path.realpath(sys.argv[0]))
-                parser.set_value(section='Settings', option='first_run', value='False')
-            if config['first_run'] == 'False':
-                if config['autosync'] == 'True':
+                if config['first_run'] == 'True':
+                    parser.set_value(section='Settings', option='first_run', value='False')
                     self.beginRebuildCatalog()
-            if config['autorun'] == 'True':
-                addToRegistry(os.path.realpath(sys.argv[0]))
+                    addToRegistry(os.path.realpath(sys.argv[0]))
+                
+                if config['first_run'] == 'False':
+                    if config['autosync'] == 'True':
+                        self.beginRebuildCatalog()
+                if config['autorun'] == 'True':
+                    addToRegistry(os.path.realpath(sys.argv[0]))
+                    
+                if config['show_tips'] == 'True':
+                    timer.singleShot(3000, self.showTips)
+                    
+            except KeyError:
+                parser.generate_ini_file()
+                
                              
         else:
             parser.generate_ini_file()
             self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-            self.setWindowOpacity(0.8)
+            self.setWindowOpacity(transparency)
+            self.beginRebuildCatalog()
+            addToRegistry(os.path.realpath(sys.argv[0]))
+            self.showTips()
 
+    def showTips(self):
+        tips_list = ['You can hide or make visible again pyLauncher\n by pressing Ctrl + Space!',
+                     'You can quit by pressing Ctrl + Q',
+                     'You can disable Catalog auto synchronisation from Options'
+                     ]
+
+        self.trayIcon.showMessage("pyLauncher | Tips", choice(tips_list), 10000)       
         
     def setShortcuts(self):
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Q"), self, self.close)
-
 
     def setTrayIcon(self):
         self.trayIcon = QtGui.QSystemTrayIcon(self)
@@ -154,7 +181,7 @@ class Main(QtGui.QMainWindow):
         self.trayMenu.addAction(self.exitAction)
 
         self.showOptionsAction.triggered.connect(self.showOptions)
-        self.showAction.triggered.connect(self.show)
+        self.showAction.triggered.connect(self._show)
         self.exitAction.triggered.connect(self._close)
         
         self.trayIcon.setContextMenu(self.trayMenu)
@@ -162,8 +189,7 @@ class Main(QtGui.QMainWindow):
         self.trayIcon.show()
 
     def showOptions(self):
-        self._OptUi = Ui_Options()
-        self._OptUi.show()
+        _OptUi.show()
     
     def onTrayIconActivated(self, reason):
         if reason == QtGui.QSystemTrayIcon.DoubleClick:
@@ -208,8 +234,12 @@ class Main(QtGui.QMainWindow):
         self.listView.setModel(self._engine.getSystem_UtilitiesAppData())
 
     def MenuShowOptions(self):
-        self._OptUi = Ui_Options()
-        self._OptUi.show()
+        _OptUi.show()
+
+    def _show(self):
+        self.trayIcon.showMessage("pyLauncher | Tips", "You can hide or make visible again pyLauncher\n by pressing Ctrl + Space!", 10000)
+        self.show()
+        
 
         
     def createContextMenu(self):
@@ -271,12 +301,16 @@ class Main(QtGui.QMainWindow):
         self._contMenu.addAction(_exit_action)
 
         _rebuild_catalog_action.triggered.connect(self.beginRebuildCatalog)
-        _hide_window.triggered.connect(self.hide)
+        _hide_window.triggered.connect(self._hide)
         _exit_action.triggered.connect(self._close)
 
     def closeEvent(self, event):
         self.trayIcon.hide()
         self.close()
+
+    def _hide(self):
+        self.trayIcon.showMessage("pyLauncher | Tips", "You can hide or make visible again pyLauncher\n by pressing Ctrl + Space!", 10000) 
+        self.hide()
         
     def _close(self):
         self.trayIcon.hide()
@@ -368,13 +402,20 @@ class Main(QtGui.QMainWindow):
    
        
     def lineEdit(self, lineEdit):
-        self.lineEdit = lineEdit   
+        self.lineEdit = lineEdit
+        self.lineEdit.returnPressed.connect(self.returnPressed)
         self.lineEdit.textChanged[str].connect(self.textChanged)
         self.lineEdit = lineEdit
         self.lineEdit.setFocus()
 
     def lineEditSetFocus(self):
         self.lineEdit.setFocus()
+
+    def returnPressed(self):
+        query = str((self.lineEdit.text()))
+        for extension in self.extensions.keys():
+            self.extensions[extension].parseQuery(query)
+        self.lineEdit.clear()
 
     def textChanged(self):
         if self.isInUse == True:
@@ -411,11 +452,12 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    disablePy2ExeLogging()
+    #disablePy2ExeLogging()
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()
     MainWindow = app.getMainWindow()
+    _OptUi = Ui_Options(MainWindow)
     ui.setupUi(MainWindow)
     MainWindow.lineEdit(ui.lineEdit)
     MainWindow.listView(ui.listView)
