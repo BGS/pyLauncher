@@ -11,7 +11,7 @@ APSW
 PyWin32 (Windows extensions for python)
 
 To do:
-Add Plugin Manager
+Add Plugin Manager *almost done.
 Better Icon Extraction system
 
 Known Issues:
