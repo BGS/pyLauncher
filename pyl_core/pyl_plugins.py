@@ -21,25 +21,55 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # -*- coding: utf-8 -*-
 
-from pyl_plugin_categories.pyl_categories import pylSearchExtensions
-from yapsy.PluginManager import PluginManager
 
-import os
 import sys
+import os
 
-class PluginInit():
-    def __init__(self):
-        self.manager = PluginManager(categories_filter={ "pylSearchExtensions": pylSearchExtensions})
+
+class PluginManager:
+
+    search_extensions = {}
+    extensions_info = {}
+    
+    def __init__(self, plugin_path):
         
-        self.manager.setPluginPlaces([os.path.join(os.path.dirname(sys.argv[0]), 'plugins')])
-        self.manager.setPluginInfoExtension('ext')
-        self.manager.locatePlugins()
-        self.manager.loadPlugins()
+        plugin_path = os.path.abspath(plugin_path)
 
-    def getPluginsFromCategory(self, category):
-        self.extensions = {}
-        for plugin in self.manager.getPluginsOfCategory(category):
-            self.extensions[plugin.plugin_object.name] = plugin.plugin_object
+        if not os.path.isdir(plugin_path):
+            return
 
-        return self.extensions
+        sys.path.append(plugin_path)
 
+        plugin_candidates = [p for p in os.listdir(plugin_path) if not p.endswith(".pyc")]
+
+        for plugin in plugin_candidates:
+            self.__initialize_plugin(plugin)
+
+    def __initialize_plugin(self, plugin):
+
+        if plugin.endswith(".py"):
+            name = plugin[:-3]   
+        else:
+            name = plugin
+                 
+        try:
+            __import__(name, globals(), locals(), [], -1)
+        except ImportError:
+            pass
+        
+        plugin = sys.modules[name]
+
+        if hasattr(plugin, plugin.info["class"]):
+            self.search_extensions[plugin.info["name"]] = plugin
+            self.extensions_info[plugin.info["name"]] = plugin.info["name"], plugin.info["author"], plugin.info["version"]
+            
+    def getPluginsHandle(self, *args, **kwargs):
+        plugin_list = []
+        for extension in self.search_extensions.keys():
+            plugin = self.search_extensions[extension]
+            plugin_list.append(getattr(plugin, plugin.info["class"])(*args, **kwargs))
+        return plugin_list
+
+    def getPluginInformation(self):
+        return self.extensions_info
+        

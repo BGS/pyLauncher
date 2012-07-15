@@ -21,11 +21,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # -*- coding: utf-8 -*-
 
-class pylSearchExtensions():
-    """ Plugins of this class extend pyLauncher application SearchBar """
+import os
 
-    name = "No Extensions"
+
+info = {"name" : "pyLWeb",
+        "author" : "Blaga Florentin Gabriel <https://github.com/BGS/pyLauncher>",
+        "version": "1.0",
+        "class" : "execWebSearch"}
+
+class execWebSearch():
 
     def parseQuery(self, query):
-        return query
-    
+        query = query.split()
+        args = query[1:]
+
+        if query:
+            if query[0] == "google":
+                os.startfile("www.google.ro/search?q=%s" % " ".join(args))
+            elif query[0] == "wikipedia":
+                os.startfile("www.en.wikipedia.org/wiki/%s" % " ".join(args))
+            else:
+                pass
+
+
+        

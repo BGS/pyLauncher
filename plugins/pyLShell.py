@@ -21,13 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # -*- coding: utf-8 -*-
 
-
-from pyl_plugin_categories.pyl_categories import pylSearchExtensions
-
 import subprocess
 
-class execCmdCommand(pylSearchExtensions):
-    name = "pyLauncher Shell"
+
+info = {"name" : "pyLShell",
+        "author" : "Blaga Florentin Gabriel <https://github.com/BGS/pyLauncher>",
+        "version": "1.0",
+        "class" : "execCmdCommand"}
+
+class execCmdCommand():
 
     def parseQuery(self, query):
         query = query.split()

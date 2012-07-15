@@ -23,7 +23,6 @@ from PyQt4 import QtCore, QtGui
 
 from pyl_core.pyl_config_parser import Parser
 from pyl_core.pyl_winreg import addToRegistry, removeFromRegistry
-from pyl_core.pyl_plugins import PluginInit
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -36,11 +35,9 @@ import sys
 class Ui_Options(QtGui.QWidget):
     def __init__(self, main_window_instance=None, parent=None):
         super(Ui_Options, self).__init__(parent)
-
-        self.plugins = PluginInit()
         
         self.setWindowTitle("pyLauncher | Options")
-        self.main_window_instance=main_window_instance
+        self.main_window_instance = main_window_instance
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
   
         self.resize(419, 243)
@@ -102,9 +99,10 @@ class Ui_Options(QtGui.QWidget):
         self.availPlugsBox = QtGui.QGroupBox(self.pylPluginsTab)
         self.availPlugsBox.setGeometry(QtCore.QRect(10, 20, 391, 181))
 
-        self.tableView = QtGui.QTableView(self.availPlugsBox)
+        self.tableView = QtGui.QTableWidget(self.availPlugsBox)
         self.tableView.setGeometry(QtCore.QRect(10, 20, 371, 151))
-
+        self.tableView.setColumnCount(3)
+        
         self.pylMainTab.addTab(self.pylPluginsTab, _fromUtf8("About pyLauncher2"))
         
         self.pylAbout = QtGui.QWidget()
@@ -136,6 +134,7 @@ class Ui_Options(QtGui.QWidget):
 
 
         self.parser = Parser()
+        
         config = self.parser.get_config_values()
         
         
@@ -159,9 +158,24 @@ class Ui_Options(QtGui.QWidget):
         self.transparencySpinBox.setValue(float(config['transparency']))
                
         self.retranslateUi()
+        self.setPluginInfo()
         
         QtCore.QMetaObject.connectSlotsByName(self)
         self.connectSignals()
+
+    def setPluginInfo(self):
+        plugin_info =  self.main_window_instance.getPluginInformation()
+
+        
+        self.tableView.setHorizontalHeaderLabels(['Plugin', 'Author', 'Version'])
+        for plugin in plugin_info.keys():
+            plugin_info_list =  plugin_info[plugin]
+            lastrow = self.tableView.rowCount()
+            self.tableView.insertRow(lastrow)
+            self.tableView.setItem(lastrow, 0, QtGui.QTableWidgetItem(plugin_info_list[0]))
+            self.tableView.setItem(lastrow, 1, QtGui.QTableWidgetItem(plugin_info_list[1]))
+            self.tableView.setItem(lastrow, 2, QtGui.QTableWidgetItem(plugin_info_list[2]))
+        
 
     def connectSignals(self):
         self.checkBoxStayOnTop.stateChanged.connect(self.stayOnTopCheckBox)
@@ -214,6 +228,7 @@ class Ui_Options(QtGui.QWidget):
             self.parser.set_value(section='Settings', option='always_on_top', value='False')
 
 
+        
     def retranslateUi(self):
         self.autoUpdatecheckBox.setText(QtGui.QApplication.translate("Options", "Auto synchronise Catalog", None, QtGui.QApplication.UnicodeUTF8))
         self.startWithWindowsCheckbox.setText(QtGui.QApplication.translate("Options", "Start with Windows", None, QtGui.QApplication.UnicodeUTF8))

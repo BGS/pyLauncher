@@ -27,9 +27,9 @@ import os
 
 from pyl_core.pyl_engine import EngineInit
 from pyl_core.pyl_winreg import addToRegistry, removeFromRegistry
-from pyl_core.pyl_model import ItemDelegatorModel
+from pyl_core.pyl_icon_delegator import ItemDelegatorModel
 from pyl_core.pyl_config_parser import Parser
-from pyl_core.pyl_plugins import PluginInit
+from pyl_core.pyl_plugins import PluginManager
 
 from pyl_rc.pyl_rc import *
 
@@ -44,7 +44,7 @@ from random import choice
 from ctypes import c_bool, c_int, WINFUNCTYPE, windll
 from ctypes.wintypes import UINT
 
-sys.path.append('pyl_plugin_categories')
+
 
 class GlobalHotKey(QtGui.QApplication):
     def __init__(self, argv):
@@ -106,11 +106,18 @@ class Main(QtGui.QMainWindow):
         self.createContextMenu()
         self._engine = EngineInit(os.path.join(os.path.dirname(sys.argv[0]), 'catalog'))
         self.cfg_parse()
+        self.initPlugins()
         self.setShortcuts()
-        self.plugins = PluginInit()
-        self.extensions = self.plugins.getPluginsFromCategory('pylSearchExtensions')
-     
 
+    def initPlugins(self):
+        self.plugin_manager = PluginManager(os.path.join(os.path.dirname(sys.argv[0]), 'plugins'))
+        self.search_extensions = self.plugin_manager.getPluginsHandle()
+        self.extensions_info = self.plugin_manager.getPluginInformation()
+
+    def getPluginInformation(self):
+        return self.extensions_info
+       
+        
     def cfg_parse(self):
 
         timer = QtCore.QTimer()
@@ -413,8 +420,9 @@ class Main(QtGui.QMainWindow):
 
     def returnPressed(self):
         query = str((self.lineEdit.text()))
-        for extension in self.extensions.keys():
-            self.extensions[extension].parseQuery(query)
+        for extension in self.search_extensions:
+            extension.parseQuery(query)
+            
         self.lineEdit.clear()
 
     def textChanged(self):

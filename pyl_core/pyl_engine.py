@@ -27,7 +27,7 @@ import sys
 import subprocess
 import os
 
-from pyl_model import setModelData
+from pyl_icon_delegator import setModelData
 from pyl_core.pyl_config_parser import Parser
 
 import ctypes
