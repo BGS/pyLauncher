@@ -27,15 +27,19 @@ import subprocess
 info = {"name" : "pyLShell",
         "author" : "Blaga Florentin Gabriel <https://github.com/BGS/pyLauncher>",
         "version": "1.0",
+        "category": "pylSearchExtensions",
         "class" : "execCmdCommand"}
 
 class execCmdCommand():
 
     def parseQuery(self, query):
-        query = query.split()
-        args = query[1:]
-        if query[0] == "cmd":
-            subprocess.Popen("cmd /K %s" % " ".join(args)) 
-        else:
-            pass
+
+        if query:
+            query = query.split()
+            args = query[1:]
+        
+            if query[0] == "cmd":
+                subprocess.Popen("cmd /K %s" % " ".join(args)) 
+            else:
+                pass
         

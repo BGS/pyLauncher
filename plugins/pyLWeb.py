@@ -37,11 +37,15 @@ class execWebSearch():
 
         if query:
             if query[0] == "google":
-                os.startfile("www.google.ro/search?q=%s" % " ".join(args))
+                os.startfile("http://www.google.com/search?source=pyLauncher&q=%s" % " ".join(args))
             elif query[0] == "wikipedia":
-                os.startfile("www.en.wikipedia.org/wiki/%s" % " ".join(args))
+                os.startfile("http://en.wikipedia.org/wiki/Special:Search?search=%s&fulltext=Search" % " ".join(args))
+            elif query[0] == "youtube":
+                os.startfile("http://www.youtube.com/results?search_query=%s" % " ".join(args))
             else:
                 pass
+                    
+               
 
 
         
