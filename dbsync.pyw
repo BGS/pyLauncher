@@ -165,8 +165,11 @@ class DbSync():
                                            pythoncom.CLSCTX_INPROC_SERVER,
                                            shell.IID_IShellLink)
         persistent_interface = sh.QueryInterface(pythoncom.IID_IPersistFile)
-
-        persistent_interface.Load(path)
+        
+        try:
+                persistent_interface.Load(path)
+        except pythoncom.com_error:
+                pass
         shortcut_path = path
         if sh.GetPath(shell.SLGP_RAWPATH)[0] and name not in self.inserted:
             path = sh.GetPath(shell.SLGP_RAWPATH)[0]
