@@ -51,7 +51,8 @@ setup(
                          
     data_files = [
             ('imageformats', [
-              r'C:\Python27\Lib\site-packages\PyQt4\plugins\imageformats\qico4.dll']),
+              r'C:\Python27\Lib\site-packages\PyQt4\plugins\imageformats\qico4.dll',
+              r'pyl.ico',]),
              
              ('plugins', ['plugins/pyLShell.py',
                           'plugins/pyLWeb.py']),
