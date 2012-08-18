@@ -247,50 +247,67 @@ class Main(QtGui.QMainWindow):
         self.trayIcon.showMessage("pyLauncher | Tips", "You can hide or make visible again pyLauncher\n by pressing Ctrl + Space!", 10000)
         self.show()
         
+    def updateContextMenu(self):
+        parser = Parser()
 
+        menu_names = parser.get_menu_names()
+
+        self._add_appAction.setText(menu_names['menu_item_1'])
+        self._add_internetAction.setText(menu_names['menu_item_2'])
+        self._add_graphAction.setText(menu_names['menu_item_3'])
+        self._add_favAction.setText(menu_names['menu_item_4'])
+        self._add_sys_util_Action.setText(menu_names['menu_item_5'])
+        
+        self._rem_appAction.setText(menu_names['menu_item_1'])
+        self._rem_internetAction.setText(menu_names['menu_item_2'])
+        self._rem_graphAction.setText(menu_names['menu_item_3'])
+        self._rem_favAction.setText(menu_names['menu_item_4'])
+        self._rem_sys_util_Action.setText(menu_names['menu_item_5'])
+        
         
     def createContextMenu(self):
+        parser = Parser()
+        menu_names = parser.get_menu_names()
         _contMenu = QtGui.QMenu(self)
         self._contMenu = _contMenu
         _sub_Add = QtGui.QMenu("Add to", self)
         _sub_Rem = QtGui.QMenu("Remove from", self)
-                
-        _add_favAction = QtGui.QAction("Favorites", self)
-        _add_appAction = QtGui.QAction("Applications", self)
-        _add_graphAction = QtGui.QAction("Media", self)
-        _add_sys_util_Action = QtGui.QAction("System Utilities", self)
-        _add_internetAction = QtGui.QAction("Internet", self)
         
-        _sub_Add.addAction(_add_favAction)
-        _sub_Add.addAction(_add_appAction)
-        _sub_Add.addAction(_add_graphAction)
-        _sub_Add.addAction(_add_sys_util_Action)
-        _sub_Add.addAction(_add_internetAction)
+        self._add_appAction = QtGui.QAction(menu_names['menu_item_1'], self)
+        self._add_internetAction = QtGui.QAction(menu_names['menu_item_2'], self)
+        self._add_graphAction = QtGui.QAction(menu_names['menu_item_3'], self)
+        self._add_favAction = QtGui.QAction(menu_names['menu_item_4'], self)
+        self._add_sys_util_Action = QtGui.QAction(menu_names['menu_item_5'], self)
         
-        _add_favAction.triggered.connect(self.execFavAddAction)
-        _add_appAction.triggered.connect(self.execAppAddAction)
-        _add_graphAction.triggered.connect(self.execGraphAddAction)
-        _add_sys_util_Action.triggered.connect(self.execSysUtilAddAction)
-        _add_internetAction.triggered.connect(self.execInternetAddAction)
+        _sub_Add.addAction(self._add_favAction)
+        _sub_Add.addAction(self._add_appAction)
+        _sub_Add.addAction(self._add_graphAction)
+        _sub_Add.addAction(self._add_sys_util_Action)
+        _sub_Add.addAction(self._add_internetAction)
+        
+        self._add_favAction.triggered.connect(self.execFavAddAction)
+        self._add_appAction.triggered.connect(self.execAppAddAction)
+        self._add_graphAction.triggered.connect(self.execGraphAddAction)
+        self._add_sys_util_Action.triggered.connect(self.execSysUtilAddAction)
+        self._add_internetAction.triggered.connect(self.execInternetAddAction)
 
- 
-        _rem_favAction = QtGui.QAction("Favorites", self)
-        _rem_appAction = QtGui.QAction("Applications", self)
-        _rem_graphAction = QtGui.QAction("Media", self)
-        _rem_sys_util_Action = QtGui.QAction("System Utilities", self)
-        _rem_internetAction = QtGui.QAction("Internet", self)
+        self._rem_appAction = QtGui.QAction(menu_names['menu_item_1'], self)
+        self._rem_internetAction = QtGui.QAction(menu_names['menu_item_2'], self)
+        self._rem_graphAction = QtGui.QAction(menu_names['menu_item_3'], self)
+        self._rem_favAction = QtGui.QAction(menu_names['menu_item_4'], self)
+        self._rem_sys_util_Action = QtGui.QAction(menu_names['menu_item_5'], self)
         
-        _sub_Rem.addAction(_rem_favAction)
-        _sub_Rem.addAction(_rem_appAction)
-        _sub_Rem.addAction(_rem_graphAction)
-        _sub_Rem.addAction(_rem_sys_util_Action)
-        _sub_Rem.addAction(_rem_internetAction)
+        _sub_Rem.addAction(self._rem_favAction)
+        _sub_Rem.addAction(self._rem_appAction)
+        _sub_Rem.addAction(self._rem_graphAction)
+        _sub_Rem.addAction(self._rem_sys_util_Action)
+        _sub_Rem.addAction(self._rem_internetAction)
 
-        _rem_favAction.triggered.connect(self.execFavRemAction)
-        _rem_appAction.triggered.connect(self.execAppRemAction)
-        _rem_graphAction.triggered.connect(self.execGraphRemAction)
-        _rem_sys_util_Action.triggered.connect(self.execSysUtilRemAction)
-        _rem_internetAction.triggered.connect(self.execInternetRemAction)
+        self._rem_favAction.triggered.connect(self.execFavRemAction)
+        self._rem_appAction.triggered.connect(self.execAppRemAction)
+        self._rem_graphAction.triggered.connect(self.execGraphRemAction)
+        self._rem_sys_util_Action.triggered.connect(self.execSysUtilRemAction)
+        self._rem_internetAction.triggered.connect(self.execInternetRemAction)
 
         self._contMenu.addMenu(_sub_Add)
         self._contMenu.addMenu(_sub_Rem)
@@ -325,14 +342,14 @@ class Main(QtGui.QMainWindow):
 
     def beginRebuildCatalog(self):
         self.dbsync = QtCore.QProcess(self)
-        self.connect(self.dbsync, QtCore.SIGNAL("started()"), self.Started)
-        self.connect(self.dbsync, QtCore.SIGNAL("finished(int)"), self.onFinished)
+        self.dbsync.finished.connect(self.onFinished)
+        self.dbsync.started.connect(self.onStarted)
         self.dbsync.setWorkingDirectory(os.path.dirname(sys.argv[0]))
         self.isInUse = True
         self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation started please wait!", 10000) 
         self.dbsync.start(os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe'))
-
-    def Started(self):
+        
+    def onStarted(self):
         self.emit(QtCore.SIGNAL("Started"))
         
     def onFinished(self, exitCode):
@@ -404,6 +421,7 @@ class Main(QtGui.QMainWindow):
         self._engine.remApplication(self._current_index, 'internet')
 
     def on_context_menu(self, point):
+        self.updateContextMenu()
         self._current_index = self.listView.indexAt(point).row()
         self._contMenu.exec_(self.listView.mapToGlobal(point))
    
@@ -460,7 +478,7 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    #disablePy2ExeLogging()
+    disablePy2ExeLogging()
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()

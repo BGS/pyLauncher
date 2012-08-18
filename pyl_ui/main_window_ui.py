@@ -26,6 +26,62 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
+from pyl_core.pyl_config_parser import Parser
+
+PAUSE_LENGTH = 200
+
+class EditableQMenu(QtGui.QMenuBar):
+    '''
+    A menu which allows users to edit the text fields.
+    Double click on them to see this in action.
+    '''
+    def __init__(self, parent=None):
+        QtGui.QMenuBar.__init__(self, parent)
+        
+        self.setMouseTracking(True)
+        
+    def mousePressEvent(self, event):
+        '''
+        slow down the click so that double clicks can be caught.
+        '''
+
+        def pass_on():
+            QtGui.QMenuBar.mousePressEvent(self, event)
+        action = self.actionAt(event.pos())
+        if not action:
+            return
+        
+        QtCore.QTimer.singleShot(PAUSE_LENGTH, pass_on)
+        action.trigger()
+        
+        
+        
+    def mouseDoubleClickEvent(self, event):
+        parser = Parser()
+        action = self.actionAt(event.pos())
+        if not action:
+            return
+        
+        if action.text() == "Options":
+            return
+        text, result = QtGui.QInputDialog.getText(self, "edit menu",
+            "enter new name for this menu item", text=action.text())
+        if result:
+            menu_item_uid = action.objectName()
+
+            if  menu_item_uid == 'item1':
+                parser.set_value(section='Menu', option='menu_item_1', value=text)
+            elif menu_item_uid == 'item2':
+                parser.set_value(section='Menu', option='menu_item_2', value=text)
+            elif menu_item_uid == 'item3':
+                parser.set_value(section='Menu', option='menu_item_3', value=text)
+            elif menu_item_uid == 'item4':
+                parser.set_value(section='Menu', option='menu_item_4', value=text)
+            elif menu_item_uid == 'item5':
+                parser.set_value(section='Menu', option='menu_item_5', value=text)
+            action.setText(text)
+
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         self._MainWindow = MainWindow
@@ -79,22 +135,11 @@ class Ui_MainWindow(object):
 "border: 1px solid gray;\n"
 "color: lightGrey;\n"
 ""))
+
         self.lineEdit.setObjectName(_fromUtf8("lineEdit"))
         self.verticalLayout.addWidget(self.lineEdit)
         MainWindow.setCentralWidget(self.centralWidget)
-        self.menuBar = QtGui.QMenuBar(MainWindow)
-        self.menuBar.setStyleSheet(_fromUtf8("""
-        *
-        {
-            background-color:  rgb(0, 0, 0);\n
-        }
-        QMenuBar::item
-        {
-            background-color:   rgb(0, 0, 0);\n
-        }
-        color: lightGrey;\n
-        """
-        ))
+        self.menuBar = EditableQMenu(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 471, 21))
         font = QtGui.QFont()
         font.setBold(True)
@@ -114,7 +159,17 @@ class Ui_MainWindow(object):
         self.menuOptions.setObjectName(_fromUtf8("menuOptions"))
         self.menuSystem_Utilities = QtGui.QMenu(self.menuBar)
         self.menuSystem_Utilities.setObjectName(_fromUtf8("menuSystem_Utilities"))
-
+        self.menuBar.setStyleSheet(_fromUtf8("""*\n                                
+{
+background-color:  rgb(0, 0, 0);\n
+}
+QMenuBar::item
+{
+background-color:   rgb(0, 0, 0);\n
+}
+color: lightGrey;\n
+    
+"""))
         MainWindow.setMenuBar(self.menuBar)
         self.statusBar = QtGui.QStatusBar(MainWindow)
         self.statusBar.setFocusPolicy(QtCore.Qt.ClickFocus)
@@ -128,12 +183,18 @@ class Ui_MainWindow(object):
 
 
     def createMenuActions(self):
-
-        self.menuAppAction = QtGui.QAction("Applications", self.menuBar)
-        self.menuInternetAction = QtGui.QAction("Internet", self.menuBar)
-        self.menuMediaAction = QtGui.QAction("Media", self.menuBar)
-        self.menuFavoritesAction = QtGui.QAction("Favorites", self.menuBar)
-        self.menuSystem_UtilitiesAction = QtGui.QAction("System Utilities", self.menuBar)
+        parser = Parser()
+        menu_names = parser.get_menu_names()
+        self.menuAppAction = QtGui.QAction(menu_names['menu_item_1'], self.menuBar)
+        self.menuAppAction.setObjectName('item1')
+        self.menuInternetAction = QtGui.QAction(menu_names['menu_item_2'], self.menuBar)
+        self.menuInternetAction.setObjectName('item2')
+        self.menuMediaAction = QtGui.QAction(menu_names['menu_item_3'], self.menuBar)
+        self.menuMediaAction.setObjectName('item3')
+        self.menuFavoritesAction = QtGui.QAction(menu_names['menu_item_4'], self.menuBar)
+        self.menuFavoritesAction.setObjectName('item4')
+        self.menuSystem_UtilitiesAction = QtGui.QAction(menu_names['menu_item_5'], self.menuBar)
+        self.menuSystem_UtilitiesAction.setObjectName('item5')
         self.menuOptionsAction = QtGui.QAction("Options", self.menuBar)
 
         self.menuBar.addAction(self.menuAppAction)
@@ -142,7 +203,7 @@ class Ui_MainWindow(object):
         self.menuBar.addAction(self.menuFavoritesAction)
         self.menuBar.addAction(self.menuSystem_UtilitiesAction)
         self.menuBar.addAction(self.menuOptionsAction)
-        
+
     def connectMenuActions(self):
         
         self.menuAppAction.triggered.connect(self._MainWindow.MenuGetAppData)
@@ -151,12 +212,14 @@ class Ui_MainWindow(object):
         self.menuFavoritesAction.triggered.connect(self._MainWindow.MenuGetFavAppData)
         self.menuSystem_UtilitiesAction.triggered.connect(self._MainWindow.MenuGetSystem_UtilitiesData)
         self.menuOptionsAction.triggered.connect(self._MainWindow.MenuShowOptions)
-        
+
+
+
     def getMainWindow(self):
         return self._MainWindow
     
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "pyLauncher", None, QtGui.QApplication.UnicodeUTF8))
         self.qLabel.setText(QtGui.QApplication.translate("MainWindow", "pyLauncher", None, QtGui.QApplication.UnicodeUTF8))
-        self.statusBar.showMessage(QtGui.QApplication.translate("MainWindow", "v0.1"))
+        self.statusBar.showMessage(QtGui.QApplication.translate("MainWindow", "v0.1A"))
 

@@ -26,6 +26,7 @@ import os
 
 info = {"name" : "pyLWeb",
         "author" : "Blaga Florentin Gabriel <https://github.com/BGS/pyLauncher>",
+        "category": "pylSearchExtensions", 
         "version": "1.0",
         "class" : "execWebSearch"}
 

@@ -85,8 +85,7 @@ class DbEngine():
             self._con.commit()
         except sqlite3.Error, e:
             print "Error %s" % e.args[0]
-
-
+            
 class DbSync():
 
     def getMsiRealPath(self, shortcut_path):
@@ -154,7 +153,7 @@ class DbSync():
                 for root, dirs, files in os.walk(path):
                     for file in files:
                         if file.endswith(".lnk"):
-                            shortcut_path.append(os.path.join(root, file))
+                            shortcut_path.append(os.path.realpath(os.path.join(root, file)))
                             shortcut_name.append(file)
         for path, name in itertools.izip(shortcut_path, shortcut_name):
             self.pushData2Db(path, name)
@@ -165,11 +164,10 @@ class DbSync():
                                            pythoncom.CLSCTX_INPROC_SERVER,
                                            shell.IID_IShellLink)
         persistent_interface = sh.QueryInterface(pythoncom.IID_IPersistFile)
-        
         try:
-                persistent_interface.Load(path)
+            persistent_interface.Load(path)
         except pythoncom.com_error:
-                pass
+            pass
         shortcut_path = path
         if sh.GetPath(shell.SLGP_RAWPATH)[0] and name not in self.inserted:
             path = sh.GetPath(shell.SLGP_RAWPATH)[0]
@@ -223,6 +221,6 @@ def disablePy2ExeLogging():
         pass
 
 if __name__ == '__main__':
-    #disablePy2ExeLogging()
+    disablePy2ExeLogging()
     DbSync().getAppPathData()
     

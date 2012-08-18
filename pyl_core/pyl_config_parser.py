@@ -37,6 +37,12 @@ class Parser():
         self._parser.set('Settings', 'max_results', 5)
         self._parser.set('Settings', 'auto_update', 'True')
         self._parser.set('Settings', 'always_on_top', 'True')
+        self._parser.add_section('Menu')
+        self._parser.set('Menu', 'menu_item_1', 'Applications')
+        self._parser.set('Menu', 'menu_item_2', 'Internet')
+        self._parser.set('Menu', 'menu_item_3', 'Media')
+        self._parser.set('Menu', 'menu_item_4', 'Favorites')
+        self._parser.set('Menu', 'menu_item_5', 'System Utilities')
 
         with open(_file, 'wb') as cfgfile:
             self._parser.write(cfgfile)
@@ -44,6 +50,10 @@ class Parser():
     def get_config_values(self, parser=ConfigParser.RawConfigParser(), _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
         parser.read(_file)
         return dict(parser.items('Settings'))
+
+    def get_menu_names(self, parser=ConfigParser.RawConfigParser(), _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
+        parser.read(_file)
+        return dict(parser.items('Menu'))
                          
     def set_value(self, section, option, value, parser=ConfigParser.RawConfigParser(), _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
         parser.read(_file)
@@ -51,4 +61,4 @@ class Parser():
         with open(_file, 'wb') as cfgfile:
             parser.write(cfgfile)
 
-
+Parser().generate_ini_file()

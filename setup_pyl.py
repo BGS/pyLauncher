@@ -39,20 +39,23 @@ try:
 except ImportError:
     pass
 
-
+excludes = ["pywin", "pywin.debugger"]
 setup(
     name='pyLauncher',
     version='0.1',
     author='Blaga Florentin Gabriel',
     options = {'py2exe': {'bundle_files': 1},
-               "py2exe":{"dll_excludes":[ "mswsock.dll", "powrprof.dll" ]},
+               'py2exe': {'optimize':2},
+               'py2exe': {'excludes': excludes},
+               "py2exe":{"dll_excludes":[ "mswsock.dll", "powrprof.dll", "MSWSOCK.DLL", "POWRPROF.DLL" ]},
                "py2exe":{"packages":["gzip"], 
                          "includes":["sip", "csv", "webbrowser"]}},
+    
                          
     data_files = [
             ('imageformats', [
-              r'C:\Python27\Lib\site-packages\PyQt4\plugins\imageformats\qico4.dll',
-              r'pyl.ico',]),
+              r'C:\Python27x86\Lib\site-packages\PyQt4\plugins\imageformats\qico4.dll',
+              r'pyl.ico']),
              
              ('plugins', ['plugins/pyLShell.py',
                           'plugins/pyLWeb.py']),
