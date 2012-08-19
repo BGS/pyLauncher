@@ -122,36 +122,29 @@ class Main(QtGui.QMainWindow):
         self.parser = Parser()
         timer = QtCore.QTimer()
 
-        if not os.path.exists(os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
+ 
+        transparency = self.parser.read_value('transparency', 0.8, 'float')
+          
+        if self.parser.read_value('always_on_top', 'True', 'str') == 'True':
             self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-            self.setWindowOpacity(0.8)
+        else:
+            self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+       
+        self.setWindowOpacity(transparency)
+           
+        if self.parser.read_value('first_run', 'True', 'str') == 'True':
+            self.parser.set_value('first_run', 'False')
             self.beginRebuildCatalog()
             addToRegistry(os.path.realpath(sys.argv[0]))
-            self.showTips()       
-        else:
-            
-            transparency = self.parser.read_value('transparency', 0.8, 'float')
-          
-            if self.parser.read_value('always_on_top', 'True', 'str') == 'True':
-                self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-            else:
-                self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-       
-            self.setWindowOpacity(transparency)
-           
-            if self.parser.read_value('first_run', 'True', 'str') == 'True':
-                self.parser.set_value('first_run', 'False')
-                self.beginRebuildCatalog()
-                addToRegistry(os.path.realpath(sys.argv[0]))
                 
-            if self.parser.read_value('first_run', 'True', 'str') == 'False':
-                if self.parser.read_value('autosync', 'True', 'str') == 'True':
-                    self.beginRebuildCatalog()
-            if self.parser.read_value('autorun', 'True', 'str') == 'True':
-                addToRegistry(os.path.realpath(sys.argv[0]))
+        if self.parser.read_value('first_run', 'True', 'str') == 'False':
+            if self.parser.read_value('autosync', 'True', 'str') == 'True':
+                self.beginRebuildCatalog()
+        if self.parser.read_value('autorun', 'True', 'str') == 'True':
+            addToRegistry(os.path.realpath(sys.argv[0]))
                     
-            if self.parser.read_value('show_tips', 'True', 'str') == 'True':
-                timer.singleShot(3000, self.showTips)
+        if self.parser.read_value('show_tips', 'True', 'str') == 'True':
+            timer.singleShot(3000, self.showTips)
            
 
 
