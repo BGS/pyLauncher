@@ -131,31 +131,25 @@ class Ui_Options(QtGui.QWidget):
         self.pylMainTab.addTab(self.pylAbout, _fromUtf8("About pyLauncher"))
 
         self.pylMainTab.setCurrentIndex(0)
-
-
         self.parser = Parser()
-        
-        config = self.parser.get_config_values()
-        
-        
-        if config['auto_update'] == 'True':
+        if self.parser.read_value('auto_update', 'True', 'str') == 'True':
             self.autoUpdatepyLauncher.toggle()
         
-        if config['autosync'] == 'True':
+        if self.parser.read_value('autosync', 'True', 'str') == 'True':
             self.autoUpdatecheckBox.toggle()
         
-        if config['autorun'] == 'True':
+        if self.parser.read_value('autorun', 'True', 'str') == 'True':
             self.startWithWindowsCheckbox.toggle()
            
-        if config['always_on_top'] == 'True':
+        if self.parser.read_value('always_on_top', 'True', 'str') == 'True':
             self.checkBoxStayOnTop.toggle()
 
-        if config['show_tips'] == 'True':
+        if self.parser.read_value('show_tips', 'True', 'str') == 'True':
             self.tipsCheckBox.toggle()
             
-        self.numberOfResultsDisplayed.setValue(int(config['max_results']))
+        self.numberOfResultsDisplayed.setValue(self.parser.read_value('max_results', 5, 'int'))
         self.numberOfResultsDisplayed.setMinimum(1)
-        self.transparencySpinBox.setValue(float(config['transparency']))
+        self.transparencySpinBox.setValue(self.parser.read_value('transparency', 0.8, 'float'))
                
         self.retranslateUi()
         self.setPluginInfo()
@@ -188,44 +182,44 @@ class Ui_Options(QtGui.QWidget):
         
     def tipsCheckBoxState(self, state):
         if state == QtCore.Qt.Checked:
-            self.parser.set_value(section='Settings', option='show_tips', value='True')
+            self.parser.set_value('show_tips', 'True')
         else:
-            self.parser.set_value(section='Settings', option='show_tips', value='False')
+            self.parser.set_value('show_tips', 'False')
                
     def updateTransparency(self, value):
-        self.parser.set_value(section='Settings', option='transparency', value=value)
+        self.parser.set_value('transparency', value)
         self.main_window_instance.setWindowOpacity(value)
         
     def autoUpdateStateChanged(self, state):
         if state == QtCore.Qt.Checked:
-            self.parser.set_value(section='Settings', option='auto_update', value='True')
+            self.parser.set_value('auto_update', 'True')
         else:
-            self.parser.set_value(section='Settings', option='auto_update', value='False')
+            self.parser.set_value('auto_update', 'False')
        
         
     def updateNumberOfResults(self):
-        self.parser.set_value(section='Settings', option='max_results', value=self.numberOfResultsDisplayed.value())
+        self.parser.set_value('max_results', self.numberOfResultsDisplayed.value())
         
     def _autoSyncCheckBox(self, state):
         if state == QtCore.Qt.Checked:
-            self.parser.set_value(section='Settings', option='autosync', value='True')
+            self.parser.set_value('autosync', 'True')
         else:
-            self.parser.set_value(section='Settings', option='autosync', value='False')
+            self.parser.set_value('autosync', 'False')
        
             
     def autoStartCheckBox(self, state):
         if state == QtCore.Qt.Checked:
-            self.parser.set_value(section='Settings', option='autorun', value='True')
+            self.parser.set_value('autorun', 'True')
             addToRegistry(os.path.realpath(sys.argv[0]))
         else:
-            self.parser.set_value(section='Settings', option='autorun', value='False')
+            self.parser.set_value('autorun', 'False')
             removeFromRegistry()
             
     def stayOnTopCheckBox(self, state):
         if state == QtCore.Qt.Checked:
-            self.parser.set_value(section='Settings', option='always_on_top', value='True')
+            self.parser.set_value('always_on_top', 'True')
         else:
-            self.parser.set_value(section='Settings', option='always_on_top', value='False')
+            self.parser.set_value('always_on_top', 'False')
 
 
         

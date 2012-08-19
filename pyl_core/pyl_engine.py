@@ -54,12 +54,11 @@ class EngineInit():
             backup.step()
    
     def getAppData(self, app_name):
-        config = self.parser.get_config_values()
         
         self._path_list = []
         self._name_list = []
 
-        for row in self._memcon.cursor().execute("SELECT name,path FROM app_data where name MATCH '*%s*' LIMIT %s" % (app_name, config['max_results'])):
+        for row in self._memcon.cursor().execute("SELECT name,path FROM app_data where name MATCH '*%s*' LIMIT %s" % (app_name, self.parser.read_value('max_results', 5, 'int'))):
             self._path_list.append(row[1])
             self._name_list.append(row[0])
 

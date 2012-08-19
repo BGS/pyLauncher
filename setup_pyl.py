@@ -60,7 +60,6 @@ setup(
              ('plugins', ['plugins/pyLShell.py',
                           'plugins/pyLWeb.py']),
              
-             ('', ['settings.ini'])
              ],
 
     windows = [{

@@ -21,44 +21,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # -*- coding: utf-8 -*-
 
-import ConfigParser, os, sys
+import os, sys
+
+from PyQt4 import QtCore
 
 class Parser():
 
-    def generate_ini_file(self, _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
-        self._parser = ConfigParser.RawConfigParser()
-        
-        self._parser.add_section('Settings')
-        self._parser.set('Settings', 'first_run', 'True')
-        self._parser.set('Settings', 'autosync', 'True')
-        self._parser.set('Settings', 'autorun', 'True')
-        self._parser.set('Settings', 'show_tips', 'True')
-        self._parser.set('Settings', 'transparency', 0.8)
-        self._parser.set('Settings', 'max_results', 5)
-        self._parser.set('Settings', 'auto_update', 'True')
-        self._parser.set('Settings', 'always_on_top', 'True')
-        self._parser.add_section('Menu')
-        self._parser.set('Menu', 'menu_item_1', 'Applications')
-        self._parser.set('Menu', 'menu_item_2', 'Internet')
-        self._parser.set('Menu', 'menu_item_3', 'Media')
-        self._parser.set('Menu', 'menu_item_4', 'Favorites')
-        self._parser.set('Menu', 'menu_item_5', 'System Utilities')
+    def __init__(self):
+        self.settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, 'pyLauncher', application='settings.ini')
+        self.settings.setFallbacksEnabled(False)
 
-        with open(_file, 'wb') as cfgfile:
-            self._parser.write(cfgfile)
+    def generate_ini_file(self):
+        self.settings.setValue('first_run', 'True')
+        self.settings.setValue('autosync', 'True')
+        self.settings.setValue('autorun', 'True')
+        self.settings.setValue('show_tips', 'True')
+        self.settings.setValue('transparency', 0.8)
+        self.settings.setValue('max_results', 5)
+        self.settings.setValue('auto_update', 'True')
+        self.settings.setValue('always_on_top', 'True')
 
-    def get_config_values(self, parser=ConfigParser.RawConfigParser(), _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
-        parser.read(_file)
-        return dict(parser.items('Settings'))
+        self.settings.setValue('menu_item_1', 'Applications')
+        self.settings.setValue('menu_item_2', 'Internet')
+        self.settings.setValue('menu_item_3', 'Media')
+        self.settings.setValue('menu_item_4', 'Favorites')
+        self.settings.setValue('menu_item_5', 'System Utilities')
 
-    def get_menu_names(self, parser=ConfigParser.RawConfigParser(), _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
-        parser.read(_file)
-        return dict(parser.items('Menu'))
+    def read_value(self, section, fallback, _type):
+        if _type == 'str':
+            return self.settings.value(section, fallback).toString()
+        elif _type == 'int':
+            return self.settings.value(section, fallback).toInt()[0]
+        elif _type == 'float':
+            return self.settings.value(section, fallback).toDouble()[0]
                          
-    def set_value(self, section, option, value, parser=ConfigParser.RawConfigParser(), _file=os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
-        parser.read(_file)
-        parser.set(section, option, value)
-        with open(_file, 'wb') as cfgfile:
-            parser.write(cfgfile)
-
-Parser().generate_ini_file()
+    def set_value(self, section, value):
+        self.settings.setValue(section, value)

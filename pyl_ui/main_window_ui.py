@@ -37,6 +37,7 @@ class EditableQMenu(QtGui.QMenuBar):
     '''
     def __init__(self, parent=None):
         QtGui.QMenuBar.__init__(self, parent)
+        self.parser = Parser()
         
         self.setMouseTracking(True)
         
@@ -57,7 +58,7 @@ class EditableQMenu(QtGui.QMenuBar):
         
         
     def mouseDoubleClickEvent(self, event):
-        parser = Parser()
+        
         action = self.actionAt(event.pos())
         if not action:
             return
@@ -70,15 +71,15 @@ class EditableQMenu(QtGui.QMenuBar):
             menu_item_uid = action.objectName()
 
             if  menu_item_uid == 'item1':
-                parser.set_value(section='Menu', option='menu_item_1', value=text)
+                self.parser.set_value('menu_item_1', text)
             elif menu_item_uid == 'item2':
-                parser.set_value(section='Menu', option='menu_item_2', value=text)
+                self.parser.set_value('menu_item_2', text)
             elif menu_item_uid == 'item3':
-                parser.set_value(section='Menu', option='menu_item_3', value=text)
+                self.parser.set_value('menu_item_3', text)
             elif menu_item_uid == 'item4':
-                parser.set_value(section='Menu', option='menu_item_4', value=text)
+                self.parser.set_value('menu_item_4', text)
             elif menu_item_uid == 'item5':
-                parser.set_value(section='Menu', option='menu_item_5', value=text)
+                self.parser.set_value('menu_item_5', text)
             action.setText(text)
 
 
@@ -148,17 +149,12 @@ class Ui_MainWindow(object):
         self.menuBar.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))
         self.menuApplications = QtGui.QMenu(self.menuBar)
-        self.menuApplications.setObjectName(_fromUtf8("menuApplications"))  
         self.menuInternet = QtGui.QMenu(self.menuBar)
-        self.menuInternet.setObjectName(_fromUtf8("menuInternet"))
         self.menuMedia = QtGui.QMenu(self.menuBar)
-        self.menuMedia.setObjectName(_fromUtf8("menuMedia"))
         self.menuFavorites = QtGui.QMenu(self.menuBar)
-        self.menuFavorites.setObjectName(_fromUtf8("menuFavorites"))
         self.menuOptions = QtGui.QMenu(self.menuBar)
         self.menuOptions.setObjectName(_fromUtf8("menuOptions"))
         self.menuSystem_Utilities = QtGui.QMenu(self.menuBar)
-        self.menuSystem_Utilities.setObjectName(_fromUtf8("menuSystem_Utilities"))
         self.menuBar.setStyleSheet(_fromUtf8("""*\n                                
 {
 background-color:  rgb(0, 0, 0);\n
@@ -184,16 +180,16 @@ color: lightGrey;\n
 
     def createMenuActions(self):
         parser = Parser()
-        menu_names = parser.get_menu_names()
-        self.menuAppAction = QtGui.QAction(menu_names['menu_item_1'], self.menuBar)
+       
+        self.menuAppAction = QtGui.QAction(parser.read_value('menu_item_1', 'Applications', 'str'), self.menuBar)
         self.menuAppAction.setObjectName('item1')
-        self.menuInternetAction = QtGui.QAction(menu_names['menu_item_2'], self.menuBar)
+        self.menuInternetAction = QtGui.QAction(parser.read_value('menu_item_2', 'Internet', 'str'), self.menuBar)
         self.menuInternetAction.setObjectName('item2')
-        self.menuMediaAction = QtGui.QAction(menu_names['menu_item_3'], self.menuBar)
+        self.menuMediaAction = QtGui.QAction(parser.read_value('menu_item_3', 'Media', 'str'), self.menuBar)
         self.menuMediaAction.setObjectName('item3')
-        self.menuFavoritesAction = QtGui.QAction(menu_names['menu_item_4'], self.menuBar)
+        self.menuFavoritesAction = QtGui.QAction(parser.read_value('menu_item_4', 'Favorites', 'str'), self.menuBar)
         self.menuFavoritesAction.setObjectName('item4')
-        self.menuSystem_UtilitiesAction = QtGui.QAction(menu_names['menu_item_5'], self.menuBar)
+        self.menuSystem_UtilitiesAction = QtGui.QAction(parser.read_value('menu_item_5', 'System Utilities', 'str'), self.menuBar)
         self.menuSystem_UtilitiesAction.setObjectName('item5')
         self.menuOptionsAction = QtGui.QAction("Options", self.menuBar)
 

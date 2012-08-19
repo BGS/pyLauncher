@@ -108,6 +108,7 @@ class Main(QtGui.QMainWindow):
         self.cfg_parse()
         self.initPlugins()
         self.setShortcuts()
+        
 
     def initPlugins(self):
         self.plugin_manager = PluginManager(os.path.join(os.path.dirname(sys.argv[0]), 'plugins'))
@@ -116,49 +117,43 @@ class Main(QtGui.QMainWindow):
 
     def getPluginInformation(self):
         return self.extensions_info
-       
         
     def cfg_parse(self):
-
+        self.parser = Parser()
         timer = QtCore.QTimer()
-        parser = Parser()
-        if os.path.exists(os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
-            config = parser.get_config_values()
-            transparency = float(config['transparency'])
 
-            try:
-                if config['always_on_top'] == 'True':
-                    self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-                else:
-                    self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-       
-                self.setWindowOpacity(transparency)
-           
-                if config['first_run'] == 'True':
-                    parser.set_value(section='Settings', option='first_run', value='False')
-                    self.beginRebuildCatalog()
-                    addToRegistry(os.path.realpath(sys.argv[0]))
-                
-                if config['first_run'] == 'False':
-                    if config['autosync'] == 'True':
-                        self.beginRebuildCatalog()
-                if config['autorun'] == 'True':
-                    addToRegistry(os.path.realpath(sys.argv[0]))
-                    
-                if config['show_tips'] == 'True':
-                    timer.singleShot(3000, self.showTips)
-                    
-            except KeyError:
-                parser.generate_ini_file()
-                
-                             
-        else:
-            parser.generate_ini_file()
+        if not os.path.exists(os.path.join(os.path.dirname(sys.argv[0]), 'settings.ini')):
             self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
-            self.setWindowOpacity(transparency)
+            self.setWindowOpacity(0.8)
             self.beginRebuildCatalog()
             addToRegistry(os.path.realpath(sys.argv[0]))
-            self.showTips()
+            self.showTips()       
+        else:
+            
+            transparency = self.parser.read_value('transparency', 0.8, 'float')
+          
+            if self.parser.read_value('always_on_top', 'True', 'str') == 'True':
+                self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+            else:
+                self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+       
+            self.setWindowOpacity(transparency)
+           
+            if self.parser.read_value('first_run', 'True', 'str') == 'True':
+                self.parser.set_value('first_run', 'False')
+                self.beginRebuildCatalog()
+                addToRegistry(os.path.realpath(sys.argv[0]))
+                
+            if self.parser.read_value('first_run', 'True', 'str') == 'False':
+                if self.parser.read_value('autosync', 'True', 'str') == 'True':
+                    self.beginRebuildCatalog()
+            if self.parser.read_value('autorun', 'True', 'str') == 'True':
+                addToRegistry(os.path.realpath(sys.argv[0]))
+                    
+            if self.parser.read_value('show_tips', 'True', 'str') == 'True':
+                timer.singleShot(3000, self.showTips)
+           
+
 
     def showTips(self):
         tips_list = ['You can hide or make visible again pyLauncher\n by pressing Ctrl + Space!',
@@ -248,36 +243,34 @@ class Main(QtGui.QMainWindow):
         self.show()
         
     def updateContextMenu(self):
-        parser = Parser()
+        parser = Parser()       
 
-        menu_names = parser.get_menu_names()
-
-        self._add_appAction.setText(menu_names['menu_item_1'])
-        self._add_internetAction.setText(menu_names['menu_item_2'])
-        self._add_graphAction.setText(menu_names['menu_item_3'])
-        self._add_favAction.setText(menu_names['menu_item_4'])
-        self._add_sys_util_Action.setText(menu_names['menu_item_5'])
+        self._add_appAction.setText(parser.read_value('menu_item_1', 'Applications', 'str'))
+        self._add_internetAction.setText(parser.read_value('menu_item_2', 'Internet', 'str'))
+        self._add_graphAction.setText(parser.read_value('menu_item_3', 'Media', 'str'))
+        self._add_favAction.setText(parser.read_value('menu_item_4', 'Favorites', 'str'))
+        self._add_sys_util_Action.setText(parser.read_value('menu_item_5', 'System Utilities', 'str'))
         
-        self._rem_appAction.setText(menu_names['menu_item_1'])
-        self._rem_internetAction.setText(menu_names['menu_item_2'])
-        self._rem_graphAction.setText(menu_names['menu_item_3'])
-        self._rem_favAction.setText(menu_names['menu_item_4'])
-        self._rem_sys_util_Action.setText(menu_names['menu_item_5'])
+        self._rem_appAction.setText(parser.read_value('menu_item_1', 'Applications', 'str'))
+        self._rem_internetAction.setText(parser.read_value('menu_item_2', 'Internet', 'str'))
+        self._rem_graphAction.setText(parser.read_value('menu_item_3', 'Media', 'str'))
+        self._rem_favAction.setText(parser.read_value('menu_item_4', 'Favorites', 'str'))
+        self._rem_sys_util_Action.setText(parser.read_value('menu_item_5', 'System Utilities', 'str'))
         
         
     def createContextMenu(self):
         parser = Parser()
-        menu_names = parser.get_menu_names()
+
         _contMenu = QtGui.QMenu(self)
         self._contMenu = _contMenu
         _sub_Add = QtGui.QMenu("Add to", self)
         _sub_Rem = QtGui.QMenu("Remove from", self)
         
-        self._add_appAction = QtGui.QAction(menu_names['menu_item_1'], self)
-        self._add_internetAction = QtGui.QAction(menu_names['menu_item_2'], self)
-        self._add_graphAction = QtGui.QAction(menu_names['menu_item_3'], self)
-        self._add_favAction = QtGui.QAction(menu_names['menu_item_4'], self)
-        self._add_sys_util_Action = QtGui.QAction(menu_names['menu_item_5'], self)
+        self._add_appAction = QtGui.QAction(parser.read_value('menu_item_1', 'Applications', 'str'), self)
+        self._add_internetAction = QtGui.QAction(parser.read_value('menu_item_2', 'Internet', 'str'), self)
+        self._add_graphAction = QtGui.QAction(parser.read_value('menu_item_3', 'Media', 'str'), self)
+        self._add_favAction = QtGui.QAction(parser.read_value('menu_item_4', 'Favorites', 'str'), self)
+        self._add_sys_util_Action = QtGui.QAction(parser.read_value('menu_item_5', 'System Utilities', 'str'), self)
         
         _sub_Add.addAction(self._add_favAction)
         _sub_Add.addAction(self._add_appAction)
@@ -291,11 +284,11 @@ class Main(QtGui.QMainWindow):
         self._add_sys_util_Action.triggered.connect(self.execSysUtilAddAction)
         self._add_internetAction.triggered.connect(self.execInternetAddAction)
 
-        self._rem_appAction = QtGui.QAction(menu_names['menu_item_1'], self)
-        self._rem_internetAction = QtGui.QAction(menu_names['menu_item_2'], self)
-        self._rem_graphAction = QtGui.QAction(menu_names['menu_item_3'], self)
-        self._rem_favAction = QtGui.QAction(menu_names['menu_item_4'], self)
-        self._rem_sys_util_Action = QtGui.QAction(menu_names['menu_item_5'], self)
+        self._rem_appAction = QtGui.QAction(parser.read_value('menu_item_1', 'Applications', 'str'), self)
+        self._rem_internetAction = QtGui.QAction(parser.read_value('menu_item_2', 'Internet', 'str'), self)
+        self._rem_graphAction = QtGui.QAction(parser.read_value('menu_item_3', 'Media', 'str'), self)
+        self._rem_favAction = QtGui.QAction(parser.read_value('menu_item_4', 'Favorites', 'str'), self)
+        self._rem_sys_util_Action = QtGui.QAction(parser.read_value('menu_item_5', 'System Utilities', 'str'), self)
         
         _sub_Rem.addAction(self._rem_favAction)
         _sub_Rem.addAction(self._rem_appAction)
@@ -345,19 +338,23 @@ class Main(QtGui.QMainWindow):
         self.dbsync.finished.connect(self.onFinished)
         self.dbsync.started.connect(self.onStarted)
         self.dbsync.setWorkingDirectory(os.path.dirname(sys.argv[0]))
+        self.dbsync.start('"{0}"'.format(os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe')))        
+
+    def onStarted(self):
         self.isInUse = True
         self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation started please wait!", 10000) 
-        self.dbsync.start(os.path.join(os.path.dirname(sys.argv[0]), 'dbsync.exe'))
-        
-    def onStarted(self):
-        self.emit(QtCore.SIGNAL("Started"))
-        
+         
     def onFinished(self, exitCode):
         if exitCode == 0:
             self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation completed!", 10000)
             self._engine.syncMemDb()
             self.isInUse = False
         else:
+            self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation failed!", 10000)   
+            self.isInUse = False
+            
+    def onError(self, errorCode):
+        if errorCode:
             self.trayIcon.showMessage("pyLauncher | Daemon", "Catalog synchronisation failed!", 10000)   
             self.isInUse = False
         
@@ -478,7 +475,7 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    disablePy2ExeLogging()
+    #disablePy2ExeLogging()
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()
