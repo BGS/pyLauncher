@@ -10,6 +10,8 @@ PyQt4
 APSW
 PyWin32 (Windows extensions for python)
 
+Microsoft Visual C++ 2008 SP1 Redistributable Package (x64 | x86)
+
 To do:
 Better Icon Extraction system
 
