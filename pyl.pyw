@@ -101,7 +101,7 @@ class Main(QtGui.QMainWindow):
         self.ui.setupUi(self)
         self.isInUse = False
         self.fileManagerMode = False
-        self.model = QtGui.QFileSystemModel()
+        self.file_manager_model = QtGui.QFileSystemModel()
         self.setTrayIcon()
         self.createContextMenu()
         self._engine = EngineInit(os.path.join(os.path.dirname(sys.argv[0]), 'catalog'))
@@ -362,7 +362,7 @@ class Main(QtGui.QMainWindow):
 
     def appExec(self, index):
         if  self.fileManagerMode == True:
-            path = str(self.model.filePath(index))
+            path = str(self.file_manager_model.filePath(index))
             path = path.replace("/", "\\")
             subprocess.Popen(r'explorer ' + path )
             self.lineEdit.clear()
@@ -446,8 +446,8 @@ class Main(QtGui.QMainWindow):
             else:
                 if os.path.exists(query):
                     self.fileManagerMode = True
-                    self.listView.setModel(self.model)
-                    self.listView.setRootIndex(self.model.setRootPath(query))
+                    self.listView.setModel(self.file_manager_model)
+                    self.listView.setRootIndex(self.file_manager_model.setRootPath(query))
                 
                 else:
                     self.fileManagerMode = False
@@ -468,7 +468,7 @@ def disablePy2ExeLogging():
 
         
 if __name__ == '__main__':
-    #disablePy2ExeLogging()
+    disablePy2ExeLogging()  #comment if debug is not needed uncomment otherwise
     app = GlobalHotKey(sys.argv)
     app.register()
     ui = Ui_MainWindow()
