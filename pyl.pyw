@@ -1,3 +1,6 @@
+
+# -*- coding: utf-8 -*-
+
 '''
 pyLauncher: Windows Application Launcher
 Copyright (C) Blaga Florentin Gabriel
@@ -17,9 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 
-#! /usr/bin/env python
-
-# -*- coding: utf-8 -*-
 
 
 import sys
@@ -108,6 +108,7 @@ class Main(QtGui.QMainWindow):
         self.cfg_parse()
         self.initPlugins()
         self.setShortcuts()
+
         
 
     def initPlugins(self):
@@ -148,6 +149,22 @@ class Main(QtGui.QMainWindow):
            
 
 
+    def eventFilter(self, watched, event):
+        if event.type() == QtCore.QEvent.KeyPress and event.matches(QtGui.QKeySequence.InsertParagraphSeparator):
+            items =  self.listView.selectionModel().selectedRows()
+            for i in items:
+                print i
+                status = self._engine.appExec(i)
+                if status == False:
+                    self.trayIcon.showMessage("pyLauncher | Daemon", "Application not found or invalid! Preparing to remove it from catalog.", 10000)
+                self.lineEdit.clear()
+                self.hide()
+                self.trayIcon.showMessage("pyLauncher | Daemon", "Application will start in a moment! Please wait.", 10000)
+            return True
+        return False
+        
+
+
     def showTips(self):
         tips_list = ['You can hide or make visible again pyLauncher\n by pressing Ctrl + Space!',
                      'You can quit by pressing Ctrl + Q',
@@ -157,7 +174,108 @@ class Main(QtGui.QMainWindow):
         self.trayIcon.showMessage("pyLauncher | Tips", choice(tips_list), 10000)       
         
     def setShortcuts(self):
-        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Q"), self, self.close)
+        QtGui.QShortcut(QtGui.QKeySequence("Esc"), self, self.close)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+A"), self, self.addToMenu1)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+S"), self, self.addToMenu2)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+D"), self, self.addToMenu3)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+F"), self, self.addToMenu4)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+G"), self, self.addToMenu5)
+
+
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Z"), self, self.remFromMenu1)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+X"), self, self.remFromMenu2)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+C"), self, self.remFromMenu3)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+V"), self, self.remFromMenu4)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+B"), self, self.remFromMenu5)
+
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Q"), self, self.showMenu1)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+W"), self, self.showMenu2)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+E"), self, self.showMenu3)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+R"), self, self.showMenu4)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+T"), self, self.showMenu5)
+
+    def showMenu1(self):
+        self.filemanagerMode = False
+        self.listView.setModel(self._engine.getMenuAppData())
+
+    def showMenu2(self):
+        self.filemanagerMode = False
+        self.listView.setModel(self._engine.getInternetAppData())
+
+    def showMenu3(self):
+        self.filemanagerMode = False
+        self.listView.setModel(self._engine.getMediaAppData())
+
+    def showMenu4(self):
+        self.filemanagerMode = False
+        self.listView.setModel(self._engine.getFavAppData())
+
+    def showMenu5(self):
+        self.filemanagerMode = False
+        self.listView.setModel(self._engine.getSystem_UtilitiesAppData())
+
+    def addToMenu1(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.addApplication(i.row(), "app")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) has been added.", 10000)
+        self.listView.setModel(self._engine.getMenuAppData())
+    def addToMenu2(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.addApplication(i.row(), "internet")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) has been added.", 10000)
+        self.listView.setModel(self._engine.getInternetAppData())
+    def addToMenu3(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.addApplication(i.row(), "graph")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) has been added.", 10000)
+        self.listView.setModel(self._engine.getMediaAppData())
+    def addToMenu4(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.addApplication(i.row(), "fav")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) has been added.", 10000)
+        self.listView.setModel(self._engine.getFavAppData())
+    def addToMenu5(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.addApplication(i.row(), "sys_util")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) has been added.", 10000)
+        self.listView.setModel(self._engine.getSystem_UtilitiesAppData())
+
+    def remFromMenu1(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.remApplication(i.row(), "app")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) have been removed.", 10000)
+        self.listView.setModel(self._engine.getMenuAppData())
+
+    def remFromMenu2(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.remApplication(i.row(), "internet")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) have been removed.", 10000)
+        self.listView.setModel(self._engine.getInternetAppData())
+    def remFromMenu3(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.remApplication(i.row(), "graph")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) have been removed.", 10000)
+        self.listView.setModel(self._engine.getMediaAppData())
+    def remFromMenu4(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.remApplication(i.row(), "fav")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) have been removed.", 10000)
+        self.listView.setModel(self._engine.getFavAppData())
+    def remFromMenu5(self):
+        items =  self.listView.selectionModel().selectedRows()
+        for i in items:
+            self._engine.remApplication(i.row(), "sys_util")
+        self.trayIcon.showMessage("pyLauncher | Daemon", "Application(s) have been removed.", 10000)
+        self.listView.setModel(self._engine.getSystem_UtilitiesAppData())
 
     def setTrayIcon(self):
         self.trayIcon = QtGui.QSystemTrayIcon(self)
@@ -353,6 +471,8 @@ class Main(QtGui.QMainWindow):
         
     def listView(self, listView):
         self.listView = listView
+        self.listView.setSelectionMode(QtGui.QListView.ExtendedSelection)
+        self.listView.installEventFilter(self)
         self.listView.setStyle(QtGui.QStyleFactory.create("plastique"))
         self.listView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.connect(self.listView,QtCore.SIGNAL('customContextMenuRequested(QPoint)'),
@@ -452,7 +572,6 @@ class Main(QtGui.QMainWindow):
                 else:
                     self.fileManagerMode = False
                     self.listView.setModel(self._engine.getAppData(query))
-
 
          
 def disablePy2ExeLogging():

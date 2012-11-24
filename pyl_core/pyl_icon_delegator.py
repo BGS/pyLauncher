@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 '''
 pyLauncher: Windows Application Launcher
 Copyright (C) Blaga Florentin Gabriel
@@ -17,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 
-#! /usr/bin/env python
 
-# -*- coding: utf-8 -*-
 
 import win32ui
 import win32gui

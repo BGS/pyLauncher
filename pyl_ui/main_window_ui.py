@@ -30,6 +30,8 @@ from pyl_core.pyl_config_parser import Parser
 
 PAUSE_LENGTH = 200
 
+
+
 class EditableQMenu(QtGui.QMenuBar):
     '''
     A menu which allows users to edit the text fields.
@@ -176,7 +178,6 @@ color: lightGrey;\n
         self.createMenuActions()
         self.connectMenuActions()
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
 
     def createMenuActions(self):
         parser = Parser()

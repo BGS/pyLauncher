@@ -1,3 +1,6 @@
+
+# -*- coding: utf-8 -*-
+
 '''
 pyLauncher: Windows Application Launcher
 Copyright (C) Blaga Florentin Gabriel
@@ -17,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 
-# -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore
 

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 '''
 pyLauncher: Windows Application Launcher
 Copyright (C) Blaga Florentin Gabriel
@@ -17,9 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 
-#! /usr/bin/env python
 
-# -*- coding: utf-8 -*-
 
 import apsw
 import sqlite3
@@ -127,6 +127,9 @@ class EngineInit():
         #resync db
         with self._memcon.backup("main", self._con, "main") as backup:
             backup.step()
+
+
+
           
     def remApplication(self, index, table):
         try:
